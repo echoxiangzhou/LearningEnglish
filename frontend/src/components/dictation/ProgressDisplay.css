@@ -1,0 +1,301 @@
+.progress-display {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 主要进度卡片 */
+.main-progress-card {
+  background: linear-gradient(135deg, #f6ffed, #f0f9ff);
+  border: 1px solid #b7eb8f;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.main-progress-card .ant-card-body {
+  padding: 20px;
+}
+
+.progress-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.progress-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+
+.progress-center {
+  text-align: center;
+}
+
+.completion-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1890ff;
+  line-height: 1;
+}
+
+.completion-label {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.progress-stats {
+  flex: 1;
+  max-width: 200px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+/* 详细统计卡片 */
+.details-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.details-card .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 12px 16px;
+}
+
+.details-card .ant-card-body {
+  padding: 16px;
+}
+
+.achievement-tags {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.achievement-tags .ant-tag {
+  margin: 2px 4px;
+  border-radius: 12px;
+  font-size: 12px;
+  padding: 2px 8px;
+}
+
+/* 正确率卡片 */
+.accuracy-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.accuracy-card .ant-card-body {
+  padding: 16px;
+}
+
+.accuracy-header {
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.accuracy-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.accuracy-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 统计数值样式 */
+.progress-display .ant-statistic-title {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.progress-display .ant-statistic-content {
+  font-size: 20px;
+}
+
+.progress-display .ant-statistic-content-value {
+  color: #1890ff;
+}
+
+/* 进度圆环自定义 */
+.progress-display .ant-progress-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-display .ant-progress-text {
+  color: #1890ff !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .progress-main {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .progress-stats {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .main-progress-card .ant-card-body {
+    padding: 16px;
+  }
+
+  .details-card .ant-card-body {
+    padding: 12px;
+  }
+
+  .progress-display .ant-statistic-content {
+    font-size: 18px;
+  }
+
+  .completion-text {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .progress-display {
+    gap: 12px;
+  }
+
+  .main-progress-card .ant-card-body,
+  .details-card .ant-card-body,
+  .accuracy-card .ant-card-body {
+    padding: 12px;
+  }
+
+  .progress-main {
+    gap: 16px;
+  }
+
+  .progress-display .ant-statistic-content {
+    font-size: 16px;
+  }
+
+  .completion-text {
+    font-size: 18px;
+  }
+
+  .achievement-tags .ant-tag {
+    font-size: 11px;
+    padding: 1px 6px;
+    margin: 1px 2px;
+  }
+}
+
+/* 进度条样式增强 */
+.progress-display .ant-progress-line {
+  margin: 0;
+}
+
+.progress-display .ant-progress-bg {
+  border-radius: 4px;
+}
+
+.progress-display .ant-progress-success-bg {
+  background-color: #52c41a;
+}
+
+/* 动画效果 */
+.main-progress-card {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.details-card {
+  animation: slideInUp 0.8s ease-out;
+}
+
+.accuracy-card {
+  animation: slideInUp 1s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 成就标签动画 */
+.achievement-tags .ant-tag {
+  animation: fadeInScale 0.5s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 数值变化动画 */
+.progress-display .ant-statistic-content-value {
+  transition: all 0.3s ease;
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .main-progress-card,
+  .details-card,
+  .accuracy-card {
+    border-width: 2px;
+  }
+  
+  .achievement-tags {
+    border-top-width: 2px;
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .main-progress-card,
+  .details-card,
+  .accuracy-card,
+  .achievement-tags .ant-tag {
+    animation: none;
+  }
+  
+  .progress-display .ant-statistic-content-value,
+  .progress-display .ant-progress-bg {
+    transition: none;
+  }
+}
+
+/* 深色主题支持（预留） */
+@media (prefers-color-scheme: dark) {
+  .main-progress-card {
+    background: linear-gradient(135deg, #1f1f1f, #2a2a2a);
+    border-color: #434343;
+  }
+  
+  .details-card,
+  .accuracy-card {
+    background: #1f1f1f;
+    border-color: #434343;
+  }
+}

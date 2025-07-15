@@ -1,0 +1,349 @@
+.sentence-display {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+  gap: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 中文翻译区域 */
+.chinese-translation {
+  background: linear-gradient(135deg, #f6ffed, #f0f9ff);
+  border: 1px solid #b7eb8f;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.chinese-translation .ant-card-body {
+  padding: 16px;
+}
+
+.translation-header {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.translation-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: #2c3e50;
+  line-height: 1.6;
+  text-align: center;
+  padding: 8px 0;
+}
+
+/* 英文句子区域 */
+.english-sentence {
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.english-sentence .ant-card-body {
+  padding: 20px;
+}
+
+.sentence-header {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.audio-button {
+  color: #1890ff;
+}
+
+.audio-button:hover {
+  background-color: #e6f7ff;
+}
+
+.sentence-content {
+  font-size: 20px;
+  line-height: 2.5;
+  text-align: left;
+  min-height: 60px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px dashed #d9d9d9;
+}
+
+/* 单词显示 */
+.word-display {
+  font-size: 20px;
+  font-weight: 500;
+  color: #1890ff;
+  padding: 4px 2px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+/* 单词输入容器 */
+.word-input-container {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  margin: 0 4px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 单词输入框 */
+.word-input {
+  min-width: 80px;
+  max-width: 120px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.word-input.ant-input {
+  height: 36px;
+}
+
+.word-input:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  transform: scale(1.02);
+}
+
+.word-input-container.success .word-input {
+  border-color: #52c41a;
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.word-input-container.error .word-input {
+  border-color: #ff4d4f;
+  background-color: #fff2f0;
+}
+
+/* 状态图标 */
+.status-icon {
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  z-index: 10;
+}
+
+.status-icon.success {
+  color: #52c41a;
+}
+
+.status-icon.error {
+  color: #ff4d4f;
+}
+
+/* 提示按钮 */
+.hint-button {
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #faad14;
+  z-index: 10;
+}
+
+.hint-button:hover {
+  background-color: #fff7e6;
+  color: #fa8c16;
+}
+
+/* 提示显示 */
+.hint-display {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+  z-index: 20;
+  white-space: nowrap;
+}
+
+.hint-display .ant-tag {
+  margin: 0;
+  font-size: 12px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 操作提示 */
+.operation-hints {
+  background: #f0f2f5;
+  padding: 12px 16px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.operation-hints .ant-tag {
+  margin: 2px 4px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .sentence-display {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .translation-text {
+    font-size: 16px;
+  }
+
+  .sentence-content {
+    font-size: 18px;
+    line-height: 2.2;
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .word-display {
+    font-size: 18px;
+  }
+
+  .word-input {
+    min-width: 70px;
+    max-width: 100px;
+    font-size: 14px;
+  }
+
+  .word-input.ant-input {
+    height: 32px;
+  }
+
+  .sentence-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .status-icon {
+    right: -16px;
+    font-size: 14px;
+  }
+
+  .hint-button {
+    right: -32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sentence-display {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .translation-text {
+    font-size: 14px;
+  }
+
+  .sentence-content {
+    font-size: 16px;
+    line-height: 2;
+    padding: 8px;
+    gap: 4px;
+  }
+
+  .word-display {
+    font-size: 16px;
+  }
+
+  .word-input {
+    min-width: 60px;
+    max-width: 80px;
+    font-size: 13px;
+  }
+
+  .word-input.ant-input {
+    height: 28px;
+  }
+
+  .operation-hints {
+    padding: 8px 12px;
+  }
+
+  .operation-hints .ant-tag {
+    font-size: 11px;
+    margin: 1px 2px;
+  }
+}
+
+/* 动画效果 */
+.word-input-container {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hint-display {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* 焦点状态 */
+.word-input-container:focus-within .word-input {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .chinese-translation,
+  .english-sentence {
+    border-width: 2px;
+  }
+  
+  .word-input {
+    border-width: 2px;
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .word-input,
+  .word-input-container,
+  .hint-display {
+    animation: none;
+    transition: none;
+  }
+}

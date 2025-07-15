@@ -1,0 +1,90 @@
+.app {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.app-header {
+  background: white;
+  border-bottom: 1px solid #e9ecef;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.app-header h1 {
+  margin: 0;
+  color: #333;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.app-nav {
+  display: flex;
+  gap: 15px;
+}
+
+.app-nav button {
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.app-nav button:hover {
+  background: #f8f9fa;
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.app-nav button.active {
+  background: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+.app-main {
+  padding: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.dashboard h2 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 28px;
+}
+
+.dashboard p {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+}
+
+.vocabulary-section {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.vocabulary-section h2 {
+  margin: 0 0 24px 0;
+  color: #333;
+  font-size: 24px;
+  text-align: center;
+}

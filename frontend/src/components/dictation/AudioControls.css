@@ -1,0 +1,236 @@
+.audio-controls {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e8e8e8;
+}
+
+.audio-controls .ant-card-body {
+  padding: 20px;
+}
+
+.audio-controls-header {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* 进度区域 */
+.progress-section {
+  margin-bottom: 20px;
+}
+
+.time-display {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.progress-bar {
+  margin: 0;
+}
+
+.progress-bar .ant-progress-bg {
+  transition: all 0.2s ease;
+}
+
+/* 主控制区域 */
+.main-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.play-button {
+  width: 56px !important;
+  height: 56px !important;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
+  border: none;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.play-button:hover {
+  background: linear-gradient(135deg, #40a9ff, #1890ff);
+  box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+  transform: scale(1.05);
+}
+
+.play-button:active {
+  transform: scale(0.95);
+}
+
+.main-controls .ant-btn:not(.play-button) {
+  border: none;
+  color: #666;
+  background: transparent;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.main-controls .ant-btn:not(.play-button):hover {
+  background: #f0f0f0;
+  color: #1890ff;
+  transform: scale(1.1);
+}
+
+/* 设置控制区域 */
+.settings-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.speed-control,
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.volume-control .ant-slider {
+  margin: 0;
+}
+
+.volume-control .ant-slider .ant-slider-track {
+  background-color: #1890ff;
+}
+
+.volume-control .ant-slider .ant-slider-handle {
+  border-color: #1890ff;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .audio-controls .ant-card-body {
+    padding: 16px;
+  }
+
+  .settings-controls {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .speed-control,
+  .volume-control {
+    justify-content: center;
+  }
+
+  .play-button {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 20px;
+  }
+
+  .main-controls .ant-btn:not(.play-button) {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .audio-controls .ant-card-body {
+    padding: 12px;
+  }
+
+  .main-controls {
+    margin-bottom: 16px;
+  }
+
+  .play-button {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 18px;
+  }
+
+  .main-controls .ant-btn:not(.play-button) {
+    width: 32px;
+    height: 32px;
+  }
+
+  .settings-controls {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .time-display {
+    font-size: 11px;
+  }
+}
+
+/* 加载状态 */
+.audio-controls .play-button.ant-btn-loading {
+  background: linear-gradient(135deg, #d9d9d9, #f0f0f0);
+  box-shadow: none;
+}
+
+/* 禁用状态 */
+.audio-controls .ant-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.audio-controls .ant-btn[disabled]:hover {
+  transform: none;
+}
+
+/* 动画效果 */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(24, 144, 255, 0.5);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  }
+}
+
+.play-button.playing {
+  animation: pulse 2s infinite;
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .audio-controls {
+    border-width: 2px;
+  }
+  
+  .settings-controls {
+    border-width: 2px;
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .play-button,
+  .main-controls .ant-btn,
+  .progress-bar .ant-progress-bg {
+    transition: none;
+    animation: none;
+  }
+  
+  .play-button:hover,
+  .main-controls .ant-btn:hover {
+    transform: none;
+  }
+}

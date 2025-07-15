@@ -1,0 +1,381 @@
+.library-selector {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.selector-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e8e8e8;
+  overflow: hidden;
+}
+
+.selector-card .ant-card-body {
+  padding: 32px;
+}
+
+/* 头部区域 */
+.selector-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.selector-header h3 {
+  margin-bottom: 8px;
+  color: #1890ff;
+}
+
+/* 内容区域 */
+.selector-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.config-section h4 {
+  margin: 0 0 8px 0;
+  color: #262626;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* 词库选择 */
+.library-option {
+  padding: 4px 0;
+}
+
+.library-name {
+  font-weight: 500;
+  color: #262626;
+  margin-bottom: 2px;
+}
+
+.library-info {
+  font-size: 12px;
+}
+
+.library-details {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.library-details .ant-tag {
+  margin: 2px 4px 2px 0;
+  border-radius: 12px;
+}
+
+/* 模式选择 */
+.mode-radio-group {
+  width: 100%;
+}
+
+.mode-radio {
+  display: flex !important;
+  align-items: flex-start !important;
+  padding: 16px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+  background: #fafafa;
+}
+
+.mode-radio:hover {
+  border-color: #1890ff;
+  background: #f0f8ff;
+}
+
+.mode-radio.ant-radio-wrapper-checked {
+  border-color: #1890ff;
+  background: #e6f7ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+}
+
+.mode-content {
+  margin-left: 8px;
+  flex: 1;
+}
+
+.mode-label {
+  font-weight: 500;
+  color: #262626;
+  margin-bottom: 4px;
+}
+
+.mode-description {
+  font-size: 12px;
+}
+
+/* 设置项 */
+.setting-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.setting-item .ant-slider {
+  margin: 8px 0 4px 0;
+}
+
+.setting-item .ant-slider-mark-text {
+  font-size: 12px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 0;
+  font-size: 14px;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #1890ff;
+}
+
+.checkbox-label:hover {
+  color: #1890ff;
+}
+
+/* 底部区域 */
+.selector-footer {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.start-button {
+  height: 48px;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #1890ff, #40a9ff);
+  border: none;
+  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.start-button:hover {
+  background: linear-gradient(135deg, #40a9ff, #1890ff);
+  box-shadow: 0 6px 20px rgba(24, 144, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.start-button:active {
+  transform: translateY(0);
+}
+
+.config-summary {
+  text-align: center;
+  padding: 12px;
+  background: #f0f2f5;
+  border-radius: 8px;
+}
+
+/* 分割线样式 */
+.selector-content .ant-divider {
+  margin: 16px 0;
+  border-color: #f0f0f0;
+}
+
+/* 选择器样式 */
+.config-section .ant-select-selector {
+  border-radius: 8px;
+  border-color: #d9d9d9;
+  transition: all 0.2s ease;
+}
+
+.config-section .ant-select:hover .ant-select-selector {
+  border-color: #1890ff;
+}
+
+.config-section .ant-select-focused .ant-select-selector {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .selector-card .ant-card-body {
+    padding: 24px;
+  }
+
+  .selector-header {
+    margin-bottom: 24px;
+  }
+
+  .selector-content {
+    gap: 20px;
+  }
+
+  .config-section {
+    gap: 12px;
+  }
+
+  .mode-radio {
+    padding: 12px;
+  }
+
+  .selector-footer {
+    margin-top: 24px;
+  }
+
+  .start-button {
+    height: 44px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .selector-card .ant-card-body {
+    padding: 16px;
+  }
+
+  .selector-header {
+    margin-bottom: 20px;
+  }
+
+  .selector-header h3 {
+    font-size: 20px;
+  }
+
+  .config-section h4 {
+    font-size: 15px;
+  }
+
+  .mode-radio {
+    padding: 10px;
+  }
+
+  .mode-label {
+    font-size: 14px;
+  }
+
+  .mode-description {
+    font-size: 11px;
+  }
+
+  .setting-item {
+    gap: 8px;
+  }
+
+  .checkbox-label {
+    font-size: 13px;
+  }
+
+  .start-button {
+    height: 40px;
+    font-size: 14px;
+    border-radius: 20px;
+  }
+
+  .config-summary {
+    padding: 8px;
+    font-size: 11px;
+  }
+}
+
+/* 动画效果 */
+.selector-card {
+  animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mode-radio {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 焦点状态 */
+.mode-radio:focus-within {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+.checkbox-label:focus-within {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .selector-card,
+  .mode-radio,
+  .library-details {
+    border-width: 2px;
+  }
+  
+  .config-section .ant-select-selector {
+    border-width: 2px;
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .selector-card,
+  .mode-radio,
+  .start-button {
+    animation: none;
+    transition: none;
+  }
+  
+  .start-button:hover {
+    transform: none;
+  }
+}
+
+/* 深色主题支持（预留） */
+@media (prefers-color-scheme: dark) {
+  .selector-card {
+    background: #1f1f1f;
+    border-color: #434343;
+  }
+  
+  .mode-radio {
+    background: #2a2a2a;
+    border-color: #434343;
+  }
+  
+  .mode-radio:hover {
+    background: #333333;
+  }
+  
+  .library-details,
+  .config-summary {
+    background: #2a2a2a;
+    border-color: #434343;
+  }
+}

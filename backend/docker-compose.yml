@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: learning_english_db
+    environment:
+      POSTGRES_DB: learning_english
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app_network
+
+  # Kokoro TTS Service
+  kokoro:
+    image: ghcr.io/remsky/kokoro-fastapi:latest
+    container_name: kokoro_tts
+    ports:
+      - "8880:8880"
+    environment:
+      - KOKORO_MODEL=kokoro
+      - KOKORO_VOICE=af_bella
+      - PORT=8880
+    volumes:
+      - kokoro_cache:/app/cache
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+  # Redis (for caching and session storage)
+  redis:
+    image: redis:7-alpine
+    container_name: learning_english_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+  kokoro_cache:
+  redis_data:
+
+networks:
+  app_network:
+    driver: bridge
