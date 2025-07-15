@@ -9,6 +9,13 @@ dev-debug.log
 # Dependency directories
 node_modules/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
 # Environment variables
 .env
 
@@ -20,10 +27,60 @@ node_modules/
 *.njsproj
 *.sln
 *.sw?
+.cursor/
+.clinerules/
+.roo/
+.roomodes
+.trae/
+.windsurf/
+.github/instructions/
 
 # OS specific
 .DS_Store
 
 # Task files
 # tasks.json
-# tasks/ 
+# tasks/
+.taskmaster/
+
+# Development specific
+*.env.example.*
+*.env.production
+*.env.development
+backend/.env.*
+frontend/.env.*
+
+# Docker and deployment files
+docker-compose.prod.yml
+Dockerfile.prod
+nginx.conf
+
+# Migration and setup scripts
+backend/migrations/
+backend/add_*.py
+backend/create_*.py
+backend/import_*.py
+backend/init_*.py
+backend/populate_*.py
+backend/setup_*.py
+
+# Test and temporary files
+backend/requirements_updated.txt
+backend/*.sh
+frontend/public/sounds/
+
+# Documentation files (if not needed)
+*_DEPLOYMENT.md
+*_PROGRESS.md
+*_SETUP.md
+AGENTS.md
+CLAUDE.md
+ImplementationPlan.md
+PRD.md
+OPENROUTER_MODELS.md
+
+# Books directory
+books/
+
+# Current directory marker
+tingxie/ 
