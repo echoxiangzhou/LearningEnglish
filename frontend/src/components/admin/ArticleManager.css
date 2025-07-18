@@ -1,0 +1,356 @@
+.article-manager {
+  padding: 24px;
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
+.article-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.article-manager-header h2 {
+  margin: 0;
+  color: #1890ff;
+}
+
+/* Table Styles */
+.ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: #e6f7ff;
+}
+
+.ant-table-tbody > tr {
+  cursor: pointer;
+}
+
+/* Modal Styles */
+.article-modal .ant-modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.article-modal .ant-form-item-label > label {
+  font-weight: 600;
+}
+
+.article-modal .ql-editor {
+  min-height: 200px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.article-modal .ql-toolbar {
+  border-top: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+}
+
+.article-modal .ql-container {
+  border-bottom: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+}
+
+/* Preview Modal Styles */
+.article-preview {
+  padding: 16px;
+}
+
+.article-preview .article-meta {
+  margin: 16px 0;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.article-preview .article-summary {
+  margin: 20px 0;
+  padding: 16px;
+  background-color: #e6f7ff;
+  border-left: 4px solid #1890ff;
+  border-radius: 4px;
+}
+
+.article-preview .article-content {
+  margin: 20px 0;
+  line-height: 1.8;
+  font-size: 15px;
+}
+
+.article-preview .article-content h1,
+.article-preview .article-content h2,
+.article-preview .article-content h3 {
+  color: #262626;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+.article-preview .article-content p {
+  margin-bottom: 16px;
+  text-align: justify;
+}
+
+.article-preview .article-content ul,
+.article-preview .article-content ol {
+  padding-left: 24px;
+  margin-bottom: 16px;
+}
+
+.article-preview .article-content li {
+  margin-bottom: 8px;
+}
+
+.article-preview .article-tags {
+  margin: 20px 0;
+  padding: 16px;
+  background-color: #f6ffed;
+  border-radius: 6px;
+}
+
+.article-preview .article-questions {
+  margin: 20px 0;
+  padding: 16px;
+  background-color: #fff7e6;
+  border-radius: 6px;
+}
+
+/* Filter Section */
+.article-manager .ant-row {
+  margin-bottom: 0;
+}
+
+.article-manager .ant-col {
+  padding: 4px 8px;
+}
+
+/* Status Badge */
+.ant-badge-status-success {
+  background-color: #52c41a;
+}
+
+.ant-badge-status-default {
+  background-color: #d9d9d9;
+}
+
+/* Action Buttons */
+.ant-btn-link {
+  padding: 4px 8px;
+  height: auto;
+}
+
+.ant-btn-link:hover {
+  color: #40a9ff;
+}
+
+.ant-btn-link.ant-btn-dangerous:hover {
+  color: #ff4d4f;
+}
+
+/* Upload Button */
+.ant-upload.ant-upload-select {
+  display: inline-block;
+}
+
+/* Tags in Table */
+.ant-tag {
+  margin: 2px;
+  border-radius: 12px;
+  font-size: 11px;
+  padding: 2px 8px;
+}
+
+/* Pagination */
+.ant-pagination {
+  margin-top: 24px;
+}
+
+.ant-pagination-total-text {
+  color: #8c8c8c;
+}
+
+/* Search Input */
+.ant-input-affix-wrapper {
+  border-radius: 6px;
+}
+
+.ant-input-affix-wrapper:hover {
+  border-color: #40a9ff;
+}
+
+/* Select Dropdown */
+.ant-select {
+  width: 100%;
+}
+
+.ant-select-selector {
+  border-radius: 6px;
+}
+
+.ant-select:hover .ant-select-selector {
+  border-color: #40a9ff;
+}
+
+/* Form Validation */
+.ant-form-item-has-error .ant-input,
+.ant-form-item-has-error .ant-input-affix-wrapper,
+.ant-form-item-has-error .ant-select-selector {
+  border-color: #ff4d4f;
+}
+
+.ant-form-item-explain-error {
+  color: #ff4d4f;
+  font-size: 12px;
+}
+
+/* Switch Component */
+.ant-switch {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+.ant-switch-checked {
+  background-color: #1890ff;
+}
+
+/* Loading State */
+.ant-table-loading .ant-table-tbody > tr {
+  opacity: 0.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .article-manager {
+    padding: 16px;
+  }
+  
+  .article-manager-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .article-manager-header h2 {
+    margin-bottom: 8px;
+  }
+  
+  .ant-table-responsive .ant-table-tbody > tr > td {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 12px 8px;
+  }
+  
+  .article-modal {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .article-modal .ant-modal {
+    max-width: none;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+  }
+  
+  .article-modal .ant-modal-content {
+    height: 100vh;
+    border-radius: 0;
+  }
+  
+  .ant-col {
+    margin-bottom: 8px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .article-manager {
+    background: white;
+  }
+  
+  .article-manager-header,
+  .ant-pagination,
+  .ant-table-thead > tr > th:last-child {
+    display: none;
+  }
+  
+  .ant-table-tbody > tr > td:last-child {
+    display: none;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .article-manager {
+    background: #141414;
+    color: #fff;
+  }
+  
+  .article-preview .article-meta {
+    background-color: #262626;
+    color: #fff;
+  }
+  
+  .article-preview .article-summary {
+    background-color: #1f1f1f;
+    border-left-color: #1890ff;
+  }
+  
+  .article-preview .article-tags {
+    background-color: #162312;
+  }
+  
+  .article-preview .article-questions {
+    background-color: #2b1d11;
+  }
+}
+
+/* Animation */
+.ant-table-tbody > tr {
+  transition: background-color 0.3s ease;
+}
+
+.ant-btn {
+  transition: all 0.3s ease;
+}
+
+.ant-modal {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Question Cards in Preview */
+.article-preview .article-questions .ant-card {
+  border: 1px solid #e8e8e8;
+  transition: box-shadow 0.3s ease;
+}
+
+.article-preview .article-questions .ant-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Tooltips */
+.ant-tooltip-inner {
+  background-color: rgba(0, 0, 0, 0.85);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Loading spinner customization */
+.ant-spin-dot-item {
+  background-color: #1890ff;
+}

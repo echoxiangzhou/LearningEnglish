@@ -43,7 +43,7 @@ class Article(db.Model):
             'image_url': self.image_url,
             'is_published': self.is_published,
             'tags': self.get_tags(),
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }
         
         if include_content:
@@ -137,7 +137,7 @@ class ReadingSession(db.Model):
             'id': self.id,
             'user_id': self.user_id,
             'article_id': self.article_id,
-            'start_time': self.start_time.isoformat(),
+            'start_time': self.start_time.isoformat() if self.start_time else None,
             'end_time': self.end_time.isoformat() if self.end_time else None,
             'reading_duration': self.reading_duration,
             'total_duration': self.total_duration,
@@ -193,7 +193,7 @@ class QuestionAttempt(db.Model):
             'is_correct': self.is_correct,
             'time_taken_seconds': self.time_taken_seconds,
             'attempt_number': self.attempt_number,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
 
@@ -228,5 +228,5 @@ class WordLookup(db.Model):
             'article_position': self.article_position,
             'lookup_count': self.lookup_count,
             'word_info': self.word.to_dict() if self.word else None,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }

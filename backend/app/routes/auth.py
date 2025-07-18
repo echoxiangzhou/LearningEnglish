@@ -22,6 +22,11 @@ def is_valid_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
 
+def is_valid_phone(phone):
+    """Validate Chinese mobile phone format"""
+    pattern = r'^1[3-9]\d{9}$'
+    return re.match(pattern, phone) is not None
+
 def is_valid_password(password):
     """Validate password strength"""
     if len(password) < 8:
@@ -46,22 +51,37 @@ def register():
         data = request.get_json()
         
         # Validate required fields
-        required_fields = ['username', 'email', 'password']
+        required_fields = ['username', 'password']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'error': f'{field.capitalize()} is required'}), 400
         
         username = data.get('username').strip()
-        email = data.get('email').strip().lower()
+        email = data.get('email')
+        phone = data.get('phone')
         password = data.get('password')
-        role = data.get('role', 'student')
+        role = data.get('role', 'student')  # 默认为学生
+        
+        # 必须提供邮箱或手机号其中一个
+        if not email and not phone:
+            return jsonify({'error': 'Email or phone number is required'}), 400
+        
+        if email and phone:
+            return jsonify({'error': 'Please provide either email or phone number, not both'}), 400
         
         # Validate input
         if len(username) < 3 or len(username) > 80:
             return jsonify({'error': 'Username must be between 3 and 80 characters'}), 400
         
-        if not is_valid_email(email):
-            return jsonify({'error': 'Invalid email format'}), 400
+        if email:
+            email = email.strip().lower()
+            if not is_valid_email(email):
+                return jsonify({'error': 'Invalid email format'}), 400
+        
+        if phone:
+            phone = phone.strip()
+            if not is_valid_phone(phone):
+                return jsonify({'error': 'Invalid phone number format'}), 400
         
         is_valid, password_message = is_valid_password(password)
         if not is_valid:
@@ -76,16 +96,21 @@ def register():
         if User.query.filter_by(username=username).first():
             return jsonify({'error': 'Username already exists'}), 409
         
-        if User.query.filter_by(email=email).first():
+        if email and User.query.filter_by(email=email).first():
             return jsonify({'error': 'Email already registered'}), 409
+            
+        if phone and User.query.filter_by(phone=phone).first():
+            return jsonify({'error': 'Phone number already registered'}), 409
         
         # Create new user
         user = User(
             username=username,
             email=email,
+            phone=phone,
             role=role,
             is_active=True,
-            is_email_verified=False
+            is_email_verified=False if email else True,  # 如果用手机注册，默认不需要邮箱验证
+            is_phone_verified=False if phone else True   # 如果用邮箱注册，默认不需要手机验证
         )
         user.set_password(password)
         
@@ -93,8 +118,10 @@ def register():
         db.session.commit()
         
         # Log registration
+        contact_info = email if email else phone
+        contact_type = 'email' if email else 'phone'
         SystemLog.log('INFO', 'auth', f'New user registered: {username}', 
-                     details={'user_id': user.id, 'email': email, 'role': role},
+                     details={'user_id': user.id, contact_type: contact_info, 'role': role},
                      request=request)
         
         # Create audit log
@@ -107,21 +134,20 @@ def register():
             request=request
         )
         
-        # TODO: Send email verification
-        # For now, auto-verify in development
-        if current_app.config.get('FLASK_ENV') == 'development':
-            user.is_email_verified = True
-            db.session.commit()
+        # Generate email verification code
+        verification_code = str(secrets.randbelow(1000000)).zfill(6)  # 6-digit code
+        user.email_verification_code = verification_code
+        user.email_verification_expires = datetime.utcnow() + timedelta(minutes=10)
+        db.session.commit()
         
-        # Generate access token
-        access_token = create_access_token(identity=user.id)
-        refresh_token = create_refresh_token(identity=user.id)
+        # TODO: Send email with verification code
+        # For now, log the verification code for testing
+        SystemLog.log('INFO', 'auth', f'Email verification code for {email}: {verification_code}', 
+                     details={'user_id': user.id, 'code': verification_code}, request=request)
         
         return jsonify({
-            'message': 'User registered successfully',
-            'user': user.to_dict(),
-            'access_token': access_token,
-            'refresh_token': refresh_token
+            'message': 'Registration successful. Please check your email for verification code.',
+            'email': email
         }), 201
         
     except Exception as e:
@@ -136,26 +162,45 @@ def login():
         data = request.get_json()
         
         # Validate required fields
-        if not data.get('email') or not data.get('password'):
-            return jsonify({'error': 'Email and password are required'}), 400
-        
-        email = data.get('email').strip().lower()
+        email = data.get('email')
+        phone = data.get('phone')
         password = data.get('password')
         
+        if not password:
+            return jsonify({'error': 'Password is required'}), 400
+            
+        if not email and not phone:
+            return jsonify({'error': 'Email or phone number is required'}), 400
+            
+        if email and phone:
+            return jsonify({'error': 'Please provide either email or phone number, not both'}), 400
+        
         # Find user
-        user = User.query.filter_by(email=email).first()
+        if email:
+            email = email.strip().lower()
+            user = User.query.filter_by(email=email).first()
+            contact_info = email
+        else:
+            phone = phone.strip()
+            user = User.query.filter_by(phone=phone).first()
+            contact_info = phone
         
         if not user or not user.check_password(password):
-            SystemLog.log('WARNING', 'auth', f'Failed login attempt for: {email}', 
+            SystemLog.log('WARNING', 'auth', f'Failed login attempt for: {contact_info}', 
                          request=request)
-            return jsonify({'error': 'Invalid email or password'}), 401
+            login_type = 'email' if email else 'phone number'
+            return jsonify({'error': f'Invalid {login_type} or password'}), 401
         
         if not user.is_active:
             return jsonify({'error': 'Account is deactivated'}), 401
         
         # Generate tokens
-        access_token = create_access_token(identity=user.id)
-        refresh_token = create_refresh_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
+        refresh_token = create_refresh_token(identity=str(user.id))
+        
+        # Update user's last login time
+        user.last_login = datetime.utcnow()
+        db.session.commit()
         
         # Log successful login
         SystemLog.log('INFO', 'auth', f'User logged in: {user.username}', 
@@ -165,7 +210,8 @@ def login():
             'message': 'Login successful',
             'user': user.to_dict(),
             'access_token': access_token,
-            'refresh_token': refresh_token
+            'refresh_token': refresh_token,
+            'expires_in': 3600  # 1 hour in seconds
         }), 200
         
     except Exception as e:
@@ -177,7 +223,7 @@ def login():
 def logout():
     """User logout endpoint"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         jti = get_jwt()['jti']  # JWT ID
         
         # Add token to blacklist
@@ -198,7 +244,7 @@ def logout():
 def refresh():
     """Refresh access token"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         user = User.query.get(current_user_id)
         
         if not user or not user.is_active:
@@ -221,7 +267,7 @@ def refresh():
 def get_profile():
     """Get current user profile"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         user = User.query.get(current_user_id)
         
         if not user:
@@ -238,7 +284,7 @@ def get_profile():
 def update_profile():
     """Update user profile"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         user = User.query.get(current_user_id)
         
         if not user:
@@ -306,7 +352,7 @@ def update_profile():
 def change_password():
     """Change user password"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         user = User.query.get(current_user_id)
         
         if not user:
@@ -379,6 +425,101 @@ def forgot_password():
         
     except Exception as e:
         SystemLog.log('ERROR', 'auth', f'Forgot password error: {str(e)}', request=request)
+        return jsonify({'error': 'Internal server error'}), 500
+
+@bp.route('/verify-email', methods=['POST'])
+def verify_email():
+    """Verify email with verification code"""
+    try:
+        data = request.get_json()
+        
+        if not data.get('email') or not data.get('code'):
+            return jsonify({'error': 'Email and verification code are required'}), 400
+        
+        email = data.get('email').strip().lower()
+        code = data.get('code').strip()
+        
+        # Find user
+        user = User.query.filter_by(email=email).first()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        if user.is_email_verified:
+            return jsonify({'error': 'Email is already verified'}), 400
+        
+        # Check verification code
+        if not user.email_verification_code or user.email_verification_code != code:
+            SystemLog.log('WARNING', 'auth', f'Invalid verification code for: {email}', 
+                         details={'user_id': user.id}, request=request)
+            return jsonify({'error': 'Invalid verification code'}), 400
+        
+        # Check if code has expired
+        if user.email_verification_expires and user.email_verification_expires < datetime.utcnow():
+            return jsonify({'error': 'Verification code has expired'}), 400
+        
+        # Verify email
+        user.is_email_verified = True
+        user.email_verification_code = None
+        user.email_verification_expires = None
+        user.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        # Log successful verification
+        SystemLog.log('INFO', 'auth', f'Email verified for user: {user.username}', 
+                     details={'user_id': user.id}, request=request)
+        
+        # Create audit log
+        AuditLog.log_action(
+            user_id=user.id,
+            action='UPDATE',
+            resource_type='user',
+            resource_id=user.id,
+            description='Email verified',
+            request=request
+        )
+        
+        return jsonify({'message': 'Email verified successfully'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        SystemLog.log('ERROR', 'auth', f'Email verification error: {str(e)}', request=request)
+        return jsonify({'error': 'Internal server error'}), 500
+
+@bp.route('/resend-verification', methods=['POST'])
+def resend_verification():
+    """Resend email verification code"""
+    try:
+        data = request.get_json()
+        
+        if not data.get('email'):
+            return jsonify({'error': 'Email is required'}), 400
+        
+        email = data.get('email').strip().lower()
+        user = User.query.filter_by(email=email).first()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        if user.is_email_verified:
+            return jsonify({'error': 'Email is already verified'}), 400
+        
+        # Generate new verification code
+        verification_code = str(secrets.randbelow(1000000)).zfill(6)
+        user.email_verification_code = verification_code
+        user.email_verification_expires = datetime.utcnow() + timedelta(minutes=10)
+        db.session.commit()
+        
+        # TODO: Send email with verification code
+        # For now, log the verification code for testing
+        SystemLog.log('INFO', 'auth', f'New verification code for {email}: {verification_code}', 
+                     details={'user_id': user.id, 'code': verification_code}, request=request)
+        
+        return jsonify({'message': 'Verification code sent successfully'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        SystemLog.log('ERROR', 'auth', f'Resend verification error: {str(e)}', request=request)
         return jsonify({'error': 'Internal server error'}), 500
 
 # Function to check if token is blacklisted (to be used in __init__.py)

@@ -1,0 +1,82 @@
+.skip-links {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #000;
+  color: #fff;
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: top 0.2s ease;
+  z-index: 10000;
+  outline: none;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.skip-link:hover {
+  background: #333;
+  color: #fff;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .skip-link {
+    background: #000;
+    color: #fff;
+    border: 2px solid #fff;
+  }
+  
+  .skip-link:focus {
+    background: #fff;
+    color: #000;
+    border: 2px solid #000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .skip-link {
+    transition: none;
+  }
+}
+
+/* Screen reader only class */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Focus visible for better keyboard navigation */
+.focus-visible:focus {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* High contrast focus indicators */
+@media (prefers-contrast: high) {
+  .focus-visible:focus {
+    outline: 3px solid;
+    outline-offset: 2px;
+  }
+}

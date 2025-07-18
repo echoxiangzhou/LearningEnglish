@@ -1,0 +1,161 @@
+.profile-container {
+  padding: 24px;
+  background: #f5f5f5;
+  min-height: calc(100vh - 64px);
+}
+
+.profile-header-card {
+  margin-bottom: 24px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-avatar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 48px;
+}
+
+.avatar-upload-btn {
+  border: 1px dashed #d9d9d9;
+  background: transparent;
+}
+
+.profile-info h2 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  color: #1f2937;
+}
+
+.user-role {
+  margin: 0 0 4px 0;
+  color: #667eea;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.user-email {
+  margin: 0 0 8px 0;
+  color: #6b7280;
+}
+
+.join-date {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.profile-tabs {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.profile-tabs .ant-tabs-tab {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.learning-level {
+  text-align: center;
+  padding: 24px;
+}
+
+.learning-level h3 {
+  margin: 0 0 16px 0;
+  font-size: 24px;
+  color: #1890ff;
+}
+
+.learning-level p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 16px;
+  }
+  
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  
+  .profile-info h2 {
+    font-size: 24px;
+  }
+  
+  .profile-tabs {
+    padding: 16px;
+  }
+  
+  .learning-level h3 {
+    font-size: 20px;
+  }
+}
+
+/* Accessibility improvements */
+.avatar-upload-btn:focus {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* Animation effects */
+.profile-header {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card hover effects */
+.profile-container .ant-card {
+  transition: all 0.3s;
+}
+
+.profile-container .ant-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Statistics cards styling */
+.profile-container .ant-statistic {
+  text-align: center;
+}
+
+.profile-container .ant-statistic-content-value {
+  font-weight: 600;
+}
+
+/* Form styling */
+.profile-tabs .ant-form-item-label > label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.profile-tabs .ant-input:disabled {
+  background: #f9fafb;
+  color: #6b7280;
+}

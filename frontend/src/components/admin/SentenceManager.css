@@ -1,0 +1,204 @@
+.sentence-manager {
+  padding: 24px;
+}
+
+.sentence-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.sentence-manager-title {
+  margin: 0;
+  color: #1890ff;
+}
+
+.sentence-search-form {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+}
+
+.sentence-search-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.sentence-search-row .ant-form-item {
+  margin-bottom: 0;
+}
+
+.sentence-table {
+  background: white;
+  border-radius: 6px;
+}
+
+.sentence-text-cell {
+  max-width: 300px;
+}
+
+.sentence-text {
+  font-weight: 500;
+  color: #262626;
+  margin-bottom: 4px;
+}
+
+.sentence-translation {
+  color: #666;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.target-word-tag {
+  background: #e6f7ff;
+  color: #1890ff;
+  border: 1px solid #91d5ff;
+  font-weight: 500;
+}
+
+.difficulty-tag {
+  font-weight: 500;
+}
+
+.difficulty-elementary {
+  background: #f6ffed;
+  color: #52c41a;
+  border: 1px solid #b7eb8f;
+}
+
+.difficulty-intermediate {
+  background: #fff7e6;
+  color: #fa8c16;
+  border: 1px solid #ffd591;
+}
+
+.difficulty-advanced {
+  background: #fff2f0;
+  color: #f5222d;
+  border: 1px solid #ffb3b3;
+}
+
+.status-tag {
+  font-weight: 500;
+}
+
+.status-pending {
+  background: #fff7e6;
+  color: #fa8c16;
+  border: 1px solid #ffd591;
+}
+
+.status-approved {
+  background: #f6ffed;
+  color: #52c41a;
+  border: 1px solid #b7eb8f;
+}
+
+.status-rejected {
+  background: #fff2f0;
+  color: #f5222d;
+  border: 1px solid #ffb3b3;
+}
+
+.score-cell {
+  text-align: center;
+}
+
+.score-value {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.score-excellent {
+  color: #52c41a;
+}
+
+.score-good {
+  color: #1890ff;
+}
+
+.score-average {
+  color: #fa8c16;
+}
+
+.score-poor {
+  color: #f5222d;
+}
+
+.sentence-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-button {
+  padding: 4px 8px;
+  font-size: 12px;
+  height: auto;
+}
+
+.action-view {
+  color: #1890ff;
+  border-color: #1890ff;
+}
+
+.action-edit {
+  color: #52c41a;
+  border-color: #52c41a;
+}
+
+.action-delete {
+  color: #f5222d;
+  border-color: #f5222d;
+}
+
+.batch-actions {
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.batch-info {
+  color: #666;
+  font-size: 14px;
+}
+
+.statistics-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.statistics-card {
+  text-align: center;
+}
+
+.statistics-card .ant-statistic-title {
+  color: #666;
+  font-size: 14px;
+}
+
+.statistics-card .ant-statistic-content {
+  color: #1890ff;
+}
+
+.pagination-container {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #d9d9d9;
+  margin-bottom: 16px;
+}

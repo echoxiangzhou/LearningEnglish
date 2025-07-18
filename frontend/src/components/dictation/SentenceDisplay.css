@@ -62,6 +62,35 @@
   background-color: #e6f7ff;
 }
 
+.audio-button.playing {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.audio-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.audio-progress .ant-progress {
+  flex: 1;
+  margin: 0;
+}
+
+.audio-time {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
 .sentence-content {
   font-size: 20px;
   line-height: 2.5;
@@ -85,6 +114,18 @@
   padding: 4px 2px;
   border-radius: 4px;
   transition: all 0.2s ease;
+  margin: 0 1px;
+}
+
+/* 标点符号显示样式 */
+.punctuation-display {
+  color: #1890ff;
+  font-weight: 600;
+  margin-left: 1px;
+}
+
+.word-text {
+  color: #262626;
 }
 
 /* 单词输入容器 */
@@ -101,6 +142,21 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.input-with-punctuation {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.auto-punctuation {
+  color: #1890ff;
+  font-weight: 600;
+  font-size: 16px;
+  margin-left: 2px;
+  cursor: help;
+  user-select: none;
 }
 
 /* 单词输入框 */

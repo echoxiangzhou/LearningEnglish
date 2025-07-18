@@ -31,7 +31,7 @@ class CreateSessionSchema(Schema):
     """Schema for creating dictation session"""
     sentence_id = fields.Int(required=True)
     difficulty = fields.Str(validate=validate.OneOf([d.value for d in DictationDifficulty]))
-    blank_percentage = fields.Float(validate=validate.Range(min=0.1, max=0.9))
+    blank_percentage = fields.Float(validate=validate.Range(min=0.1, max=1.0))
 
 
 class SubmitWordSchema(Schema):
@@ -72,7 +72,7 @@ def create_session():
         schema = CreateSessionSchema()
         data = schema.load(request.json)
         
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # Parse difficulty if provided
         difficulty = None
@@ -125,7 +125,7 @@ def create_session():
 def get_session(session_id):
     """Get current session state"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # Verify session belongs to user
         from app.models.dictation_practice import DictationSession
@@ -155,7 +155,7 @@ def submit_word():
         schema = SubmitWordSchema()
         data = schema.load(request.json)
         
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # Verify session belongs to user
         from app.models.dictation_practice import DictationSession
@@ -187,7 +187,7 @@ def get_hint():
         schema = GetHintSchema()
         data = schema.load(request.json)
         
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # Verify session belongs to user
         from app.models.dictation_practice import DictationSession
@@ -220,7 +220,7 @@ def update_playback_speed():
         schema = UpdateSpeedSchema()
         data = schema.load(request.json)
         
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # Verify session belongs to user
         from app.models.dictation_practice import DictationSession
@@ -268,7 +268,7 @@ def record_playback():
         if not session_id:
             return jsonify({'success': False, 'error': 'Session ID required'}), 400
         
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # Verify session belongs to user
         from app.models.dictation_practice import DictationSession
@@ -291,7 +291,7 @@ def record_playback():
 def get_statistics():
     """Get user's dictation practice statistics"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         stats = dictation_service.get_user_statistics(user_id)
         
         return jsonify({
@@ -309,14 +309,18 @@ def get_statistics():
 def get_practice_sentences():
     """Get sentences for practice based on user's needs"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         count = request.args.get('count', 5, type=int)
         focus_problem_words = request.args.get('focus_problem_words', 'true').lower() == 'true'
+        
+        # Get category IDs from request
+        category_ids = request.args.getlist('categories', type=int)
         
         sentences = dictation_service.get_practice_sentences(
             user_id=user_id,
             count=count,
-            focus_problem_words=focus_problem_words
+            focus_problem_words=focus_problem_words,
+            category_ids=category_ids
         )
         
         return jsonify({
@@ -326,8 +330,9 @@ def get_practice_sentences():
                     'id': s.id,
                     'text': s.text,
                     'target_word': s.target_word,
-                    'difficulty': s.difficulty.value,
-                    'word_count': len(s.text.split())
+                    'difficulty': s.difficulty,
+                    'word_count': len(s.text.split()),
+                    'chinese_translation': s.chinese_translation
                 }
                 for s in sentences
             ],
@@ -344,7 +349,7 @@ def get_practice_sentences():
 def get_session_review(session_id):
     """Get detailed review for a completed session"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # Verify session belongs to user
         from app.models.dictation_practice import DictationSession
@@ -371,7 +376,7 @@ def get_session_review(session_id):
 def get_settings():
     """Get user's dictation settings"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         settings = DictationSettings.query.filter_by(user_id=user_id).first()
         if not settings:
@@ -398,7 +403,7 @@ def update_settings():
         schema = UpdateSettingsSchema()
         data = schema.load(request.json)
         
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         settings = DictationSettings.query.filter_by(user_id=user_id).first()
         if not settings:

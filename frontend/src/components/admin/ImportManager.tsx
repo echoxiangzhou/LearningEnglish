@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ContentImport } from '../../types/import';
+import type { ContentImport } from '../../types/import';
 import { importService } from '../../services/importService';
 import FileUpload from './FileUpload';
 import ImportList from './ImportList';

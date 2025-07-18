@@ -1,0 +1,67 @@
+.phone-verification-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.verification-card {
+  width: 100%;
+  max-width: 450px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.verification-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.verification-icon {
+  font-size: 48px;
+  color: #1890ff;
+  margin-bottom: 16px;
+}
+
+.verification-header h2 {
+  margin-bottom: 8px;
+  color: #262626;
+}
+
+.verification-actions {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.resend-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.verification-tips {
+  margin-top: 24px;
+  padding: 16px;
+  background: #f6f6f6;
+  border-radius: 8px;
+}
+
+.verification-tips h5 {
+  margin-bottom: 8px;
+  color: #595959;
+}
+
+.verification-tips ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.verification-tips li {
+  font-size: 12px;
+  color: #8c8c8c;
+  line-height: 1.5;
+}

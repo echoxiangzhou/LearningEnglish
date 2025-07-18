@@ -1,0 +1,105 @@
+.word-practice-module {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.module-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.module-header .ant-typography {
+  margin-bottom: 8px;
+}
+
+.practice-tabs {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.practice-tabs .ant-tabs-tab {
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 24px;
+}
+
+.practice-tabs .ant-tabs-tab-active {
+  background: linear-gradient(135deg, #1890ff, #096dd9);
+  color: white;
+  border-radius: 8px;
+}
+
+.practice-tabs .ant-tabs-content-holder {
+  padding-top: 20px;
+}
+
+.results-container {
+  text-align: center;
+  padding: 20px;
+}
+
+.errors-card {
+  margin-top: 30px;
+  text-align: left;
+}
+
+.error-item {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 8px;
+}
+
+.error-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.error-details .expected {
+  color: #52c41a;
+  font-family: 'Courier New', monospace;
+}
+
+.error-details .actual {
+  color: #f5222d;
+  font-family: 'Courier New', monospace;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .word-practice-module {
+    padding: 10px;
+  }
+  
+  .practice-tabs {
+    padding: 15px;
+  }
+  
+  .practice-tabs .ant-tabs-tab {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+  
+  .error-details {
+    font-size: 14px;
+  }
+}
+
+/* Tab content animations */
+.ant-tabs-content {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,178 @@
+.library-selector {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.library-selector-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.library-selector-header h2 {
+  color: #1890ff;
+  margin-bottom: 16px;
+}
+
+.library-selector-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+}
+
+.library-selector-loading h4 {
+  margin-top: 16px;
+  color: #666;
+}
+
+.library-type-section {
+  margin-bottom: 32px;
+}
+
+.library-type-title {
+  color: #1890ff;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.library-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  height: 100%;
+}
+
+.library-card:hover {
+  border-color: #1890ff;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.library-card.selected {
+  border-color: #1890ff;
+  background-color: #f6ffed;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.2);
+}
+
+.library-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.library-title {
+  margin: 0 !important;
+  flex: 1;
+  color: #262626;
+}
+
+.library-description {
+  margin-bottom: 12px !important;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.library-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.library-stats .ant-typography {
+  font-size: 12px;
+  margin: 0;
+}
+
+.library-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.library-sections {
+  margin-bottom: 32px;
+}
+
+.library-selector-footer {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  border-top: 1px solid #f0f0f0;
+  padding: 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 32px;
+}
+
+.selection-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .library-selector {
+    padding: 16px;
+  }
+  
+  .library-selector-header {
+    margin-bottom: 24px;
+  }
+  
+  .library-type-section {
+    margin-bottom: 24px;
+  }
+  
+  .library-selector-footer {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+  
+  .selection-summary {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .library-card.selected {
+    background-color: #1f3a2e;
+  }
+  
+  .library-title {
+    color: #ffffff;
+  }
+  
+  .library-description {
+    color: #cccccc;
+  }
+  
+  .library-selector-footer {
+    background: #1f1f1f;
+    border-top-color: #434343;
+  }
+}
+
+/* Print styles */
+@media print {
+  .library-selector-footer {
+    display: none;
+  }
+  
+  .library-card {
+    border: 1px solid #ddd;
+    break-inside: avoid;
+  }
+}

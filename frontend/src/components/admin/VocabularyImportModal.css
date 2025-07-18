@@ -1,0 +1,133 @@
+.processing-container {
+  padding: 20px;
+  text-align: center;
+}
+
+.processing-container .ant-typography {
+  margin-bottom: 16px;
+}
+
+.preview-container {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.preview-container .ant-table-wrapper {
+  margin-top: 16px;
+}
+
+.preview-container .ant-statistic-content {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.preview-container .ant-card {
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ant-upload-drag {
+  border: 2px dashed #d9d9d9;
+  border-radius: 6px;
+  background: #fafafa;
+  transition: border-color 0.3s;
+}
+
+.ant-upload-drag:hover {
+  border-color: #1890ff;
+}
+
+.ant-upload-drag-icon {
+  font-size: 48px;
+  color: #999;
+  margin-bottom: 16px;
+}
+
+.ant-upload-text {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.ant-upload-hint {
+  font-size: 14px;
+  color: #999;
+}
+
+.audio-preview-button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.word-status-tag {
+  margin-left: 8px;
+}
+
+.import-stats-row {
+  margin-bottom: 16px;
+}
+
+.import-stats-row .ant-col {
+  margin-bottom: 8px;
+}
+
+/* 词库分类选择器样式 */
+.vocabulary-category-select .ant-select-selection-item {
+  font-weight: 500;
+  color: #1890ff;
+}
+
+.vocabulary-category-option {
+  padding: 8px 12px;
+}
+
+.vocabulary-category-option .category-name {
+  font-weight: 500;
+  color: #1890ff;
+  margin-bottom: 2px;
+}
+
+.vocabulary-category-option .category-description {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.category-refresh-btn {
+  padding: 0;
+  height: auto;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.category-empty-state {
+  padding: 8px 12px;
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+}
+
+/* 优化表单布局 */
+.vocabulary-import-form .ant-form-item-label {
+  font-weight: 600;
+}
+
+.vocabulary-import-form .ant-form-item-extra {
+  color: #666;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .preview-container .ant-card {
+    margin-bottom: 8px;
+  }
+  
+  .import-stats-row .ant-col {
+    margin-bottom: 16px;
+  }
+
+  .vocabulary-category-option .category-description {
+    display: none;
+  }
+}

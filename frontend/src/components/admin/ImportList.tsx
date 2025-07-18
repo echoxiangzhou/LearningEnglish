@@ -1,5 +1,5 @@
 import React from 'react';
-import { ContentImport } from '../../types/import';
+import type { ContentImport } from '../../types/import';
 import { importService } from '../../services/importService';
 
 interface ImportListProps {

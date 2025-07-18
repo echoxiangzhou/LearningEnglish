@@ -36,12 +36,12 @@ class DictationWord:
     is_blanked: bool
     is_completed: bool = False
     user_input: str = ""
-    hints_available: List[HintType] = None
-    hints_used: List[HintType] = None
+    hints_available: List[str] = None
+    hints_used: List[str] = None
     
     def __post_init__(self):
         if self.hints_available is None:
-            self.hints_available = list(HintType)
+            self.hints_available = [h.value for h in HintType]
         if self.hints_used is None:
             self.hints_used = []
 
@@ -104,7 +104,11 @@ class DictationService:
             
             # Calculate words to blank
             words_to_blank = int(total_words * blank_percentage)
-            words_to_blank = max(1, min(words_to_blank, total_words - 1))  # At least 1, leave at least 1
+            # Allow full blanking when blank_percentage is high (>= 0.85)
+            if blank_percentage >= 0.85:
+                words_to_blank = min(words_to_blank, total_words)  # Allow all words to be blanked
+            else:
+                words_to_blank = max(1, min(words_to_blank, total_words - 1))  # At least 1, leave at least 1
             
             # Create session
             session = DictationSession(
@@ -118,7 +122,8 @@ class DictationService:
                 session_data={
                     'sentence_text': sentence.text,
                     'target_word': sentence.target_word,
-                    'sentence_difficulty': sentence.difficulty.value
+                    'sentence_difficulty': sentence.difficulty,
+                    'chinese_translation': sentence.chinese_translation
                 }
             )
             
@@ -150,10 +155,58 @@ class DictationService:
             raise
     
     def _parse_sentence(self, sentence: str) -> List[str]:
-        """Parse sentence into words, preserving punctuation"""
-        # Simple word tokenization that keeps punctuation attached
-        words = re.findall(r'\b\w+\b(?:[\'"]?\w+)?|[^\w\s]', sentence)
-        return [w for w in words if w.strip()]
+        """Parse sentence into words, removing trailing punctuation"""
+        import string
+        
+        words = []
+        # Split by whitespace and clean up punctuation
+        raw_tokens = sentence.split()
+        
+        for token in raw_tokens:
+            # Remove leading and trailing whitespace
+            word = token.strip()
+            if word:
+                # Remove trailing punctuation but keep contractions like "don't"
+                cleaned_word = word
+                # Remove punctuation from the end (but keep apostrophes in the middle for contractions)
+                while cleaned_word and cleaned_word[-1] in string.punctuation and cleaned_word[-1] != "'":
+                    cleaned_word = cleaned_word[:-1]
+                
+                # If there's still a word after cleaning, add it
+                if cleaned_word:
+                    words.append(cleaned_word)
+        
+        return words
+    
+    def _parse_sentence_with_punctuation(self, sentence: str) -> List[Dict]:
+        """Parse sentence into tokens including words and punctuation"""
+        import string
+        import re
+        
+        tokens = []
+        # Use regex to split while preserving punctuation
+        # This pattern captures words and punctuation separately
+        pattern = r"(\w+(?:'\w+)?|[" + re.escape(string.punctuation) + r"])"
+        matches = re.findall(pattern, sentence)
+        
+        word_position = 0
+        for match in matches:
+            if match.strip():  # Skip empty matches
+                if any(c.isalnum() for c in match):  # This is a word
+                    tokens.append({
+                        'type': 'word',
+                        'text': match,
+                        'word_position': word_position
+                    })
+                    word_position += 1
+                else:  # This is punctuation
+                    tokens.append({
+                        'type': 'punctuation',
+                        'text': match,
+                        'word_position': None
+                    })
+        
+        return tokens
     
     def _select_words_to_blank(self, words: List[str], num_to_blank: int,
                              target_word: str, difficulty: DictationDifficulty) -> Set[int]:
@@ -242,25 +295,32 @@ class DictationService:
         words = []
         for attempt in word_attempts:
             hints_used = attempt.hints_used or []
-            word = DictationWord(
-                position=attempt.word_position,
-                original=attempt.original_word,
-                display=self._get_display_word(attempt),
-                is_blanked=attempt.is_blanked,
-                is_completed=attempt.is_correct or False,
-                user_input=attempt.user_input or "",
-                hints_used=[HintType(h) for h in hints_used]
-            )
-            words.append(word)
+            word_dict = {
+                'position': attempt.word_position,
+                'original': attempt.original_word,
+                'word': attempt.original_word,  # Add word field for compatibility
+                'display': self._get_display_word(attempt),
+                'is_blanked': attempt.is_blanked,
+                'is_blank': attempt.is_blanked,  # Add is_blank for compatibility
+                'is_completed': attempt.is_correct or False,
+                'user_input': attempt.user_input or "",
+                'hints_used': [HintType(h).value for h in hints_used] if hints_used else []
+            }
+            words.append(word_dict)
+        
+        # Parse sentence with punctuation for display
+        sentence_text = session.session_data.get('sentence_text', '')
+        tokens_with_punctuation = self._parse_sentence_with_punctuation(sentence_text)
         
         # Calculate progress
-        completed_words = sum(1 for w in words if w.is_blanked and w.is_completed)
+        completed_words = sum(1 for w in words if w['is_blanked'] and w['is_completed'])
         progress = (completed_words / session.blanked_words * 100) if session.blanked_words > 0 else 0
         
         return {
             'session_id': session.id,
             'sentence_id': session.sentence_id,
             'words': words,
+            'tokens_with_punctuation': tokens_with_punctuation,  # Add punctuation info
             'total_words': session.total_words,
             'blanked_words': session.blanked_words,
             'completed_words': completed_words,
@@ -551,7 +611,7 @@ class DictationService:
         }
     
     def get_practice_sentences(self, user_id: int, count: int = 5,
-                             focus_problem_words: bool = True) -> List[GeneratedSentence]:
+                             focus_problem_words: bool = True, category_ids: List[int] = None) -> List[GeneratedSentence]:
         """Get sentences for practice based on user's needs"""
         try:
             # Get user progress and settings
@@ -568,17 +628,36 @@ class DictationService:
                 approval_status=ApprovalStatus.APPROVED
             )
             
-            # Filter by appropriate difficulty
+            # Filter by categories if specified
+            if category_ids:
+                # Get the category mapping by querying existing categories
+                category_data = db.session.query(
+                    GeneratedSentence.source_category,
+                    func.count(GeneratedSentence.id).label('count')
+                ).group_by(GeneratedSentence.source_category).all()
+                
+                # Convert category IDs to source_category names
+                valid_source_categories = []
+                for category_id in category_ids:
+                    if 1 <= category_id <= len(category_data):
+                        source_category = category_data[category_id - 1][0]  # ID is 1-indexed
+                        valid_source_categories.append(source_category)
+                
+                # Filter by valid source categories
+                if valid_source_categories:
+                    query = query.filter(GeneratedSentence.source_category.in_(valid_source_categories))
+            
+            # Filter by appropriate difficulty (using string values)
             difficulty_map = {
-                DictationDifficulty.BEGINNER: DifficultyLevel.ELEMENTARY,
-                DictationDifficulty.ELEMENTARY: DifficultyLevel.ELEMENTARY,
-                DictationDifficulty.INTERMEDIATE: DifficultyLevel.INTERMEDIATE,
-                DictationDifficulty.ADVANCED: DifficultyLevel.ADVANCED
+                DictationDifficulty.BEGINNER: 'elementary',
+                DictationDifficulty.ELEMENTARY: 'elementary',
+                DictationDifficulty.INTERMEDIATE: 'intermediate',
+                DictationDifficulty.ADVANCED: 'advanced'
             }
             
             target_difficulty = difficulty_map.get(
                 progress.current_difficulty, 
-                DifficultyLevel.ELEMENTARY
+                'elementary'
             )
             query = query.filter_by(difficulty=target_difficulty)
             
@@ -589,22 +668,31 @@ class DictationService:
                     *[GeneratedSentence.target_word == word.lower() 
                       for word in progress.problem_words[:10]]  # Limit to recent 10
                 )
-                problem_sentences = query.filter(problem_word_filter).limit(count // 2).all()
+                problem_sentences = query.filter(problem_word_filter).order_by(
+                    GeneratedSentence.readability_score.desc().nulls_last(),
+                    func.length(GeneratedSentence.text).asc()
+                ).limit(count // 2).all()
                 
-                # Get remaining random sentences
+                # Get remaining sentences ordered by difficulty
                 remaining_count = count - len(problem_sentences)
                 if remaining_count > 0:
                     exclude_ids = [s.id for s in problem_sentences]
-                    random_sentences = query.filter(
+                    remaining_sentences = query.filter(
                         ~GeneratedSentence.id.in_(exclude_ids)
-                    ).order_by(func.random()).limit(remaining_count).all()
+                    ).order_by(
+                        GeneratedSentence.readability_score.desc().nulls_last(),
+                        func.length(GeneratedSentence.text).asc()
+                    ).limit(remaining_count).all()
                     
-                    return problem_sentences + random_sentences
+                    return problem_sentences + remaining_sentences
                 
                 return problem_sentences
             
-            # Get random sentences
-            return query.order_by(func.random()).limit(count).all()
+            # Get sentences ordered from easy to difficult
+            return query.order_by(
+                GeneratedSentence.readability_score.desc().nulls_last(),
+                func.length(GeneratedSentence.text).asc()
+            ).limit(count).all()
             
         except Exception as e:
             logger.error(f"Error getting practice sentences: {str(e)}")

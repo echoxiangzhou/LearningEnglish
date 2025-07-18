@@ -16,7 +16,7 @@ bp = Blueprint('learning', __name__, url_prefix='/api/learning')
 def start_dictation_session():
     """Start a new dictation practice session"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         data = request.get_json()
         
         # Get session parameters
@@ -77,7 +77,7 @@ def start_dictation_session():
 def submit_dictation_answer():
     """Submit an answer for a dictation exercise"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         session_id = int(request.view_args['session_id'])
         data = request.get_json()
         
@@ -157,7 +157,7 @@ def submit_dictation_answer():
 def start_vocabulary_practice():
     """Start vocabulary practice session"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         data = request.get_json()
         
         # Get practice parameters
@@ -230,7 +230,7 @@ def start_vocabulary_practice():
 def submit_vocabulary_answer():
     """Submit vocabulary practice answer"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         session_id = int(request.view_args['session_id'])
         data = request.get_json()
         
@@ -332,7 +332,7 @@ def submit_vocabulary_answer():
 def start_reading_session(article_id):
     """Start a reading session for an article"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         # Get article
         article = Article.query.filter_by(id=article_id, is_published=True).first()
@@ -378,7 +378,7 @@ def start_reading_session(article_id):
 def update_reading_progress(session_id):
     """Update reading progress"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         data = request.get_json()
         
         # Get session
@@ -423,7 +423,7 @@ def update_reading_progress(session_id):
 def get_progress_overview():
     """Get user's learning progress overview"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         # Get recent sessions
         recent_sessions = LearningSession.query.filter_by(
@@ -472,7 +472,7 @@ def get_progress_overview():
 def get_learning_sessions():
     """Get user's learning sessions"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         page = request.args.get('page', 1, type=int)
         per_page = min(request.args.get('per_page', 20, type=int), 100)

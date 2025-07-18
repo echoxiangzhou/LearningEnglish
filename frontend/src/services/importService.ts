@@ -1,4 +1,4 @@
-import { ContentImport, ImportListResponse } from '../types/import';
+import type { ContentImport, ImportListResponse } from '../types/import';
 
 const API_BASE = '/api/content';
 
@@ -10,7 +10,7 @@ class ImportService {
     const response = await fetch(`${API_BASE}/upload`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
       },
       body: formData
     });
@@ -35,7 +35,7 @@ class ImportService {
 
     const response = await fetch(`${API_BASE}/imports?${params}`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
       }
     });
 
@@ -50,7 +50,7 @@ class ImportService {
   async getImportDetails(importId: number): Promise<{ import: ContentImport }> {
     const response = await fetch(`${API_BASE}/imports/${importId}`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
       }
     });
 
@@ -66,7 +66,7 @@ class ImportService {
     const response = await fetch(`${API_BASE}/imports/${importId}/process`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         'Content-Type': 'application/json'
       }
     });
@@ -87,7 +87,7 @@ class ImportService {
     const response = await fetch(`${API_BASE}/imports/${importId}/approve`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ notes })
@@ -108,7 +108,7 @@ class ImportService {
     const response = await fetch(`${API_BASE}/imports/${importId}/reject`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ notes })

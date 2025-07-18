@@ -1,0 +1,98 @@
+.error-boundary-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #f5f5f5;
+}
+
+.error-boundary-card {
+  max-width: 800px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+}
+
+.error-details-card {
+  margin-top: 24px;
+  border: 1px solid #ff7875;
+  background: #fff2f0;
+}
+
+.error-details {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+}
+
+.error-stack {
+  background: #f5f5f5;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 12px;
+  margin: 8px 0;
+  overflow-x: auto;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .error-boundary-container {
+    padding: 16px;
+  }
+  
+  .error-boundary-card .ant-result-extra {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .error-boundary-card .ant-result-extra button {
+    width: 100%;
+  }
+}
+
+/* Accessibility improvements */
+.error-boundary-card .ant-result-icon {
+  color: #ff4d4f;
+}
+
+.error-boundary-card .ant-result-title {
+  color: #262626;
+  font-weight: 600;
+}
+
+.error-boundary-card .ant-result-subtitle {
+  color: #595959;
+  line-height: 1.6;
+}
+
+/* Animation for error appearance */
+.error-boundary-card {
+  animation: errorSlideIn 0.3s ease-out;
+}
+
+@keyframes errorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .error-boundary-card {
+    border: 2px solid #000;
+  }
+  
+  .error-details-card {
+    border: 2px solid #ff0000;
+    background: #ffe6e6;
+  }
+}

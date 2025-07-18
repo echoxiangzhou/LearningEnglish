@@ -168,14 +168,6 @@ const AudioControls: React.FC<AudioControlsProps> = ({
     }
   };
 
-  // 跳转到指定时间
-  const handleTimeChange = (value: number) => {
-    if (audioRef.current && duration > 0) {
-      const newTime = (value / 100) * duration;
-      audioRef.current.currentTime = newTime;
-      setCurrentTime(newTime);
-    }
-  };
 
   // 速度控制
   const handleSpeedChange = (speed: number) => {

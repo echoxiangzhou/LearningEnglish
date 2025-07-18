@@ -1,0 +1,136 @@
+/* Main Layout Styles */
+
+.main-layout {
+  min-height: 100vh;
+}
+
+.main-layout.mobile {
+  --sidebar-width: 0;
+}
+
+.main-layout.tablet {
+  --sidebar-width: 80px;
+}
+
+.main-layout.desktop {
+  --sidebar-width: 280px;
+}
+
+/* Auth Layout for non-authenticated users */
+.auth-layout {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Site Layout */
+.site-layout {
+  margin-left: var(--sidebar-width, 280px);
+  transition: margin-left 0.2s;
+}
+
+.main-layout.mobile .site-layout {
+  margin-left: 0;
+}
+
+.mobile-sidebar {
+  z-index: 1000;
+  position: fixed !important;
+  height: 100vh;
+  left: 0;
+  top: 0;
+}
+
+/* Content Area */
+.site-layout-content {
+  position: relative;
+  overflow: hidden;
+}
+
+.page-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Global Loading Overlay */
+.global-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.theme-dark .global-loading-overlay {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.loading-spinner {
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 16px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #1890ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner p {
+  margin: 0;
+  color: #666;
+}
+
+.theme-dark .loading-spinner p {
+  color: #ccc;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .site-layout {
+    margin-left: 0 !important;
+  }
+  
+  .site-layout-content {
+    margin: 8px !important;
+    padding: 16px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .site-layout-content {
+    margin: 4px !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+  }
+}
+
+/* Theme Transitions */
+.main-layout * {
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+}
+
+/* Dark Theme Adjustments */
+.theme-dark .site-layout-content {
+  background: #141414 !important;
+  color: #fff;
+}
+
+.theme-dark .page-content {
+  color: #fff;
+}

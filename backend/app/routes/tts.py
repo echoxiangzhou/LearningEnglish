@@ -1,13 +1,95 @@
 from flask import Blueprint, request, jsonify, send_file, Response
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.services.tts_service import TTSService
+from app.models.generated_sentence import GeneratedSentence
+from app import db
 import os
 import base64
 import io
+import hashlib
 from typing import Generator
 
 bp = Blueprint('tts', __name__, url_prefix='/api/tts')
 tts_service = TTSService()
+
+@bp.route('/sentence-audio', methods=['POST'])
+@jwt_required()
+def get_sentence_audio():
+    """
+    Get audio for a sentence (preferably from pre-generated audio)
+    
+    Request body:
+    {
+        "text": "Text to get audio for",
+        "voice": "af_bella" (optional),
+        "speed": 1.0 (optional)
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        if not data or 'text' not in data:
+            return jsonify({'error': 'Text is required'}), 400
+        
+        text = data.get('text').strip()
+        if not text:
+            return jsonify({'error': 'Text cannot be empty'}), 400
+        
+        voice = data.get('voice', 'af_bella')
+        speed = float(data.get('speed', 1.0))
+        
+        # Generate cache key
+        cache_key = hashlib.md5(f"kokoro_{text}_{voice}_{speed}".encode()).hexdigest()
+        
+        # First try to find pre-generated audio in database
+        sentence = GeneratedSentence.query.filter_by(
+            text=text,
+            audio_cache_key=cache_key
+        ).first()
+        
+        if sentence and sentence.audio_file_path and os.path.exists(sentence.audio_file_path):
+            print(f"Serving pre-generated audio for: {text[:30]}...")
+            return send_file(
+                sentence.audio_file_path,
+                mimetype='audio/mpeg',
+                as_attachment=False,
+                download_name=f'sentence_{sentence.id}.mp3'
+            )
+        
+        # Fallback to real-time generation
+        print(f"No pre-generated audio found, generating on-demand for: {text[:30]}...")
+        file_path, error = tts_service.generate_audio(
+            text=text,
+            provider='kokoro',
+            voice=voice,
+            speed=speed
+        )
+        
+        if error:
+            return jsonify({'error': error}), 500
+        
+        if not file_path or not os.path.exists(file_path):
+            return jsonify({'error': 'Failed to generate audio'}), 500
+        
+        # Store the generated audio info back to database if it's a known sentence
+        sentence = GeneratedSentence.query.filter_by(text=text).first()
+        if sentence:
+            sentence.audio_file_path = file_path
+            sentence.audio_cache_key = cache_key
+            sentence.audio_generated_at = db.func.now()
+            db.session.commit()
+            print(f"Saved audio info to database for sentence ID: {sentence.id}")
+        
+        return send_file(
+            file_path,
+            mimetype='audio/mpeg',
+            as_attachment=False,
+            download_name=os.path.basename(file_path)
+        )
+        
+    except Exception as e:
+        print(f"Error in get_sentence_audio: {str(e)}")
+        return jsonify({'error': 'Internal server error', 'details': str(e)}), 500
 
 @bp.route('/generate', methods=['POST'])
 @jwt_required()
@@ -55,6 +137,9 @@ def generate_audio():
             kwargs['emotion'] = data.get('emotion', 'neutral')
             kwargs['format'] = data.get('format', 'mp3')
             kwargs['model'] = data.get('model', 'speech-02-hd')
+        
+        # Log the request for debugging
+        print(f"TTS Request - Text: {text[:50]}..., Provider: {provider}, Voice: {voice}, Speed: {speed}")
         
         # Generate audio
         file_path, error = tts_service.generate_audio(
@@ -259,7 +344,7 @@ def clear_cache():
     """
     try:
         # Check if user is admin
-        current_user = get_jwt_identity()
+        current_user = int(get_jwt_identity())
         # TODO: Add proper admin check when user roles are implemented
         
         data = request.get_json() or {}

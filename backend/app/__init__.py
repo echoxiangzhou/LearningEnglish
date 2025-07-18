@@ -41,7 +41,15 @@ def create_app():
     from app.routes.sentence_generation import sentence_generation_bp
     from app.routes.sentence_admin import sentence_admin_bp
     from app.routes.dictation import dictation_bp
-    from app.routes.vocabulary import vocabulary_bp
+    from app.routes.analytics import analytics_bp
+    from app.routes.unified_analytics import unified_analytics_bp
+    from app.routes.articles import articles_bp
+    from app.routes.dictionary import dictionary_bp
+    from app.routes.user_management import bp as user_management_bp
+    from app.routes.sound_config import sound_config_bp
+    from app.routes.admin_statistics import admin_stats_bp
+    from app.routes.onboarding import bp as onboarding_bp
+    from app.routes.error_tracking import error_tracking_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(main_bp, url_prefix='/api')
@@ -51,7 +59,15 @@ def create_app():
     app.register_blueprint(sentence_generation_bp)
     app.register_blueprint(sentence_admin_bp)
     app.register_blueprint(dictation_bp)
-    app.register_blueprint(vocabulary_bp)
+    app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
+    app.register_blueprint(unified_analytics_bp, url_prefix='/api/unified-analytics')
+    app.register_blueprint(articles_bp)
+    app.register_blueprint(dictionary_bp, url_prefix='/api/dictionary')
+    app.register_blueprint(user_management_bp)
+    app.register_blueprint(sound_config_bp, url_prefix='/api/sound')
+    app.register_blueprint(admin_stats_bp)
+    app.register_blueprint(onboarding_bp, url_prefix='/api/onboarding')
+    app.register_blueprint(error_tracking_bp)
     
     # JWT token blacklist check
     @jwt.token_in_blocklist_loader

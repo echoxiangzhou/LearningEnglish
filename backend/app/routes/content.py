@@ -26,7 +26,7 @@ def allowed_file(filename):
 
 def require_admin():
     """Decorator to require admin role"""
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
     if not user or user.role != 'admin':
         return jsonify({'error': 'Admin access required'}), 403
@@ -111,7 +111,7 @@ def create_word():
         db.session.commit()
         
         # Log action
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         AuditLog.log_action(
             user_id=current_user_id,
             action='CREATE',
@@ -162,7 +162,7 @@ def update_word(word_id):
         db.session.commit()
         
         # Log action
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         AuditLog.log_action(
             user_id=current_user_id,
             action='UPDATE',
@@ -200,7 +200,7 @@ def delete_word(word_id):
         db.session.commit()
         
         # Log action
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         AuditLog.log_action(
             user_id=current_user_id,
             action='DELETE',
@@ -299,7 +299,7 @@ def create_sentence():
         db.session.commit()
         
         # Log action
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         AuditLog.log_action(
             user_id=current_user_id,
             action='CREATE',
@@ -371,7 +371,7 @@ def get_article(article_id):
         article = Article.query.get_or_404(article_id)
         
         # Check if user can access unpublished content
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         user = User.query.get(current_user_id)
         
         if not article.is_published and user.role not in ['admin', 'teacher']:
@@ -424,7 +424,7 @@ def upload_file():
         file.save(file_path)
         
         # Create import record
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         content_import = ContentImport(
             user_id=current_user_id,
             filename=unique_filename,
@@ -847,7 +847,7 @@ def approve_import(import_id):
             items_created = 0
         
         # Update import record
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         content_import.is_approved = True
         content_import.approved_by = current_user_id
         content_import.approved_at = datetime.utcnow()
@@ -896,7 +896,7 @@ def reject_import(import_id):
             return jsonify({'error': 'Rejection notes are required'}), 400
         
         # Update import record
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         content_import.status = 'failed'
         content_import.is_approved = False
         content_import.approved_by = current_user_id

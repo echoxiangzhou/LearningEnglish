@@ -1,0 +1,520 @@
+.chinese-translation-view {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.progress-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e8e8e8;
+  margin-bottom: 20px;
+}
+
+.translation-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+}
+
+.progress-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.progress-bar {
+  flex: 1;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.translation-content {
+  margin-bottom: 32px;
+}
+
+.chinese-section {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.chinese-text {
+  font-size: 32px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.english-section {
+  margin-bottom: 32px;
+  padding: 0 24px;
+}
+
+.word-blanks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.visible-word {
+  font-size: 18px;
+  font-weight: 500;
+  color: #1a1a1a;
+  padding: 8px 12px;
+  background: rgba(24, 144, 255, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(24, 144, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+.word-blank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+  position: relative;
+}
+
+.word-input {
+  font-size: 20px !important;
+  font-weight: 500;
+  text-align: center;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.word-input.pending {
+  border-color: #d9d9d9;
+  background: #ffffff;
+}
+
+.word-input.correct {
+  border-color: #52c41a;
+  background: #f6ffed;
+  color: #389e0d;
+  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2);
+}
+
+.word-input.incorrect {
+  border-color: #ff4d4f;
+  background: #fff2f0;
+  color: #cf1322;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2);
+}
+
+/* 结果显示界面样式 */
+.word-results {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.word-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+  position: relative;
+}
+
+.word-display {
+  font-size: 18px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-align: center;
+  min-width: 60px;
+  margin-bottom: 8px;
+  border: 2px solid transparent;
+}
+
+.word-display.correct {
+  background: #f6ffed;
+  color: #389e0d;
+  border-color: #52c41a;
+}
+
+.word-display.incorrect {
+  background: #fff2f0;
+  color: #cf1322;
+  border-color: #ff4d4f;
+}
+
+.word-translation {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 4px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.word-underline {
+  font-size: 18px;
+  font-weight: 500;
+  color: #8c8c8c;
+  padding: 8px 12px;
+  border-bottom: 2px solid #d9d9d9;
+  min-width: 60px;
+  text-align: center;
+  background: #f5f5f5;
+  border-radius: 4px 4px 0 0;
+}
+
+.input-section {
+  padding: 0 24px;
+}
+
+.translation-input {
+  margin-bottom: 16px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+.translation-input.correct {
+  border-color: #52c41a;
+  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2);
+}
+
+.translation-input.incorrect {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2);
+}
+
+.feedback {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.feedback.correct {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  color: #389e0d;
+}
+
+.feedback.incorrect {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #cf1322;
+}
+
+.hint-section {
+  margin-bottom: 16px;
+}
+
+.hint-content {
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: 6px;
+  padding: 12px;
+  color: #0958d9;
+  font-size: 14px;
+}
+
+.control-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+  padding: 0 24px;
+}
+
+.control-section .ant-btn {
+  height: 44px;
+  border-radius: 8px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.control-section .ant-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.control-shortcuts {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.audio-control-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.audio-button {
+  min-width: 120px;
+  height: 36px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.audio-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.audio-button.playing {
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.navigation-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-button {
+  flex-shrink: 0;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.nav-button .anticon {
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.nav-button-icon-only {
+  width: 48px !important;
+  height: 48px !important;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.nav-button-icon-only:hover {
+  background-color: #f0f0f0;
+  transform: scale(1.1);
+}
+
+.nav-button-icon-only .anticon {
+  font-size: 24px !important;
+  line-height: 1;
+}
+
+.nav-button-icon-only.ant-btn-lg {
+  width: 48px !important;
+  height: 48px !important;
+}
+
+.keyboard-shortcuts {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px 16px;
+  text-align: center;
+  flex: 1;
+}
+
+.keyboard-shortcuts span {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.keyboard-shortcuts kbd {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: 0 2px;
+  font-size: 11px;
+  color: #333;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .chinese-translation-view {
+    padding: 16px;
+  }
+  
+  .chinese-text {
+    font-size: 24px;
+  }
+  
+  .control-section {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .control-section .ant-btn {
+    height: 36px;
+    font-size: 13px;
+  }
+  
+  .navigation-controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+  
+  .keyboard-shortcuts {
+    order: 1;
+    width: 100%;
+    margin-bottom: 8px;
+  }
+  
+  .nav-button-icon-only {
+    width: 40px !important;
+    height: 40px !important;
+    order: 2;
+  }
+  
+  .nav-button-icon-only .anticon {
+    font-size: 20px !important;
+  }
+  
+  .audio-control-row {
+    padding: 8px 0;
+  }
+  
+  .audio-button {
+    min-width: 100px;
+    height: 32px;
+    font-size: 13px;
+  }
+  
+  /* 进度卡片响应式 */
+  .progress-card {
+    border-radius: 8px;
+  }
+  
+  .progress-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .title-text {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .word-blanks {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .word-blank {
+    min-width: 100%;
+  }
+  
+  .control-section .ant-space {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+  
+}
+
+/* 进度卡片相关样式 */
+.main-progress-section {
+  margin-bottom: 16px;
+}
+
+.progress-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.progress-icon {
+  color: #faad14;
+  font-size: 18px;
+}
+
+.title-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.current-sentence-tag {
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.overall-progress {
+  margin-bottom: 12px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: #595959;
+}
+
+.progress-percentage {
+  font-weight: 600;
+  color: #262626;
+}
+
+.overall-progress-bar .ant-progress-bg {
+  transition: all 0.3s ease;
+}
+
+
+/* 标点符号样式 */
+.punctuation {
+  display: inline;
+  margin: 0 1px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #666;
+  vertical-align: baseline;
+}
+
+.punctuation-result {
+  display: inline;
+  margin: 0 2px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+  vertical-align: baseline;
+}

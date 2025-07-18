@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ContentImport, VocabularyItem, SentenceItem, ArticleItem } from '../../types/import';
+import type { ContentImport, VocabularyItem, SentenceItem, ArticleItem } from '../../types/import';
 import { importService } from '../../services/importService';
 
 interface ImportDetailProps {
@@ -140,12 +140,6 @@ const ImportDetail: React.FC<ImportDetailProps> = ({
     </div>
   );
 
-  const getQualityIndicator = (score: number) => {
-    if (score >= 90) return { text: 'Excellent', color: 'green', icon: '🟢' };
-    if (score >= 75) return { text: 'Good', color: 'blue', icon: '🔵' };
-    if (score >= 60) return { text: 'Fair', color: 'orange', icon: '🟡' };
-    return { text: 'Poor', color: 'red', icon: '🔴' };
-  };
 
   return (
     <div className="import-detail">

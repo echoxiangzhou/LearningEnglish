@@ -7,6 +7,7 @@ Provides REST API endpoints for administrative sentence management.
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from marshmallow import Schema, fields, validate, ValidationError
+from sqlalchemy import func
 import logging
 
 from app.services.sentence_admin_service import SentenceAdminService
@@ -27,7 +28,7 @@ admin_service = SentenceAdminService()
 # Helper function to check admin permissions
 def require_admin():
     """Check if current user has admin permissions"""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
     
     if not user or not user.is_admin:
@@ -54,10 +55,13 @@ class ApprovalSchema(Schema):
 
 class SearchSchema(Schema):
     """Schema for sentence search"""
-    query = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    search = fields.Str(validate=validate.Length(min=1, max=100))
+    target_word = fields.Str(validate=validate.Length(min=1, max=50))
     difficulty = fields.Str(validate=validate.OneOf([d.value for d in DifficultyLevel]))
     approval_status = fields.Str(validate=validate.OneOf([s.value for s in ApprovalStatus]))
-    limit = fields.Int(validate=validate.Range(min=1, max=100), load_default=50)
+    category_id = fields.Int(validate=validate.Range(min=1))
+    page = fields.Int(validate=validate.Range(min=1), load_default=1)
+    per_page = fields.Int(validate=validate.Range(min=1, max=100), load_default=20)
 
 
 class ExportSchema(Schema):
@@ -139,7 +143,7 @@ def approve_sentences():
         schema = ApprovalSchema()
         data = schema.load(request.json)
         
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         sentence_ids = data['sentence_ids']
         notes = data.get('notes')
         
@@ -179,7 +183,7 @@ def reject_sentences():
         schema = ApprovalSchema()
         data = schema.load(request.json)
         
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         sentence_ids = data['sentence_ids']
         notes = data.get('notes')
         
@@ -226,6 +230,214 @@ def get_statistics():
         return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
 
+@sentence_admin_bp.route('/categories', methods=['GET'])
+@jwt_required()
+def get_categories():
+    """Get sentence categories based on source_category values"""
+    if not require_admin():
+        return jsonify({'success': False, 'error': 'Admin access required'}), 403
+    
+    try:
+        from app.models.generated_sentence import GeneratedSentence
+        from sqlalchemy import func
+        
+        # Get distinct source_category values with counts
+        category_data = db.session.query(
+            GeneratedSentence.source_category,
+            func.count(GeneratedSentence.id).label('sentence_count')
+        ).group_by(GeneratedSentence.source_category).all()
+        
+        # Convert to expected format
+        categories = []
+        category_descriptions = {
+            '小学教材例句': '来自小学教材的例句，适合初学者学习',
+            'AI generated': 'AI生成的句子，覆盖各种语法模式和词汇',
+            '初中教材例句': '来自初中教材的例句，适合中等水平学习者',
+            '高中教材例句': '来自高中教材的例句，适合高水平学习者'
+        }
+        
+        for i, (source_category, count) in enumerate(category_data, 1):
+            category_name = source_category or 'Uncategorized'
+            categories.append({
+                'id': i,
+                'name': category_name,
+                'description': category_descriptions.get(category_name, f'来自{category_name}的句子'),
+                'difficulty': 'elementary',  # Default difficulty
+                'is_active': True,
+                'sentence_count': count,
+                'created_at': '2024-01-01T00:00:00Z',
+                'updated_at': '2024-01-01T00:00:00Z'
+            })
+        
+        return jsonify(categories), 200
+        
+    except Exception as e:
+        logger.error(f"Error getting categories: {str(e)}")
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+
+@sentence_admin_bp.route('/categories/assign', methods=['POST'])
+@jwt_required()
+def assign_categories():
+    """Assign categories to users"""
+    if not require_admin():
+        return jsonify({'success': False, 'error': 'Admin access required'}), 403
+    
+    try:
+        from app.models.user_category import UserCategoryAssignment
+        from app.models.generated_sentence import GeneratedSentence
+        
+        data = request.json
+        logger.info(f"Received assignment data: {data}")
+        
+        if not data:
+            return jsonify({
+                'success': False, 
+                'error': 'No data provided'
+            }), 400
+            
+        user_ids = data.get('user_ids', [])
+        category_ids = data.get('category_ids', [])
+        assigned_by = data.get('assigned_by', 'admin')
+        
+        # Validate input
+        if not user_ids or not category_ids:
+            logger.warning(f"Invalid input: user_ids={user_ids}, category_ids={category_ids}")
+            return jsonify({
+                'success': False, 
+                'error': 'Both user_ids and category_ids are required and must not be empty'
+            }), 400
+            
+        # Validate data types
+        if not isinstance(user_ids, list) or not isinstance(category_ids, list):
+            return jsonify({
+                'success': False, 
+                'error': 'user_ids and category_ids must be lists'
+            }), 400
+        
+        # Get category names from source_category mapping
+        category_data = db.session.query(
+            GeneratedSentence.source_category,
+            func.count(GeneratedSentence.id).label('count')
+        ).group_by(GeneratedSentence.source_category).all()
+        
+        # Create mapping from category_id to category_name
+        category_mapping = {}
+        for i, (source_category, count) in enumerate(category_data, 1):
+            category_name = source_category or 'Uncategorized'
+            category_mapping[i] = category_name
+        
+        # Remove existing assignments for these users and categories
+        try:
+            deleted_count = UserCategoryAssignment.query.filter(
+                UserCategoryAssignment.user_id.in_(user_ids),
+                UserCategoryAssignment.category_id.in_(category_ids)
+            ).delete(synchronize_session=False)
+            logger.info(f"Removed {deleted_count} existing assignments")
+        except Exception as e:
+            logger.error(f"Error removing existing assignments: {str(e)}")
+            db.session.rollback()
+            return jsonify({'success': False, 'error': 'Failed to remove existing assignments'}), 500
+        
+        # Create new assignments
+        new_assignments = []
+        for user_id in user_ids:
+            for category_id in category_ids:
+                if category_id in category_mapping:
+                    assignment = UserCategoryAssignment(
+                        user_id=user_id,
+                        category_id=category_id,
+                        category_name=category_mapping[category_id],
+                        assigned_by=assigned_by
+                    )
+                    new_assignments.append(assignment)
+                else:
+                    logger.warning(f"Category ID {category_id} not found in mapping")
+        
+        if not new_assignments:
+            return jsonify({
+                'success': False,
+                'error': 'No valid assignments to create'
+            }), 400
+        
+        # Add all new assignments
+        try:
+            db.session.add_all(new_assignments)
+            db.session.commit()
+            logger.info(f"Successfully assigned {len(category_ids)} categories to {len(user_ids)} users by {assigned_by}")
+        except Exception as e:
+            logger.error(f"Error creating assignments: {str(e)}")
+            db.session.rollback()
+            return jsonify({'success': False, 'error': 'Failed to create assignments'}), 500
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully assigned {len(category_ids)} categories to {len(user_ids)} users',
+            'assignments_created': len(new_assignments)
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error assigning categories: {str(e)}")
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+
+@sentence_admin_bp.route('/', methods=['GET'])
+@jwt_required()
+def get_sentences():
+    """Get all sentences with optional filtering"""
+    if not require_admin():
+        return jsonify({'success': False, 'error': 'Admin access required'}), 403
+    
+    try:
+        # Import here to avoid circular imports
+        from app.models.generated_sentence import GeneratedSentence
+        
+        # Get query parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        search = request.args.get('search', '')
+        target_word = request.args.get('target_word', '')
+        difficulty = request.args.get('difficulty', '')
+        approval_status = request.args.get('approval_status', '')
+        
+        # Build query
+        query = GeneratedSentence.query
+        
+        # Apply filters
+        if search:
+            query = query.filter(GeneratedSentence.text.ilike(f"%{search}%"))
+        
+        if target_word:
+            query = query.filter(GeneratedSentence.target_word.ilike(f"%{target_word}%"))
+        
+        if difficulty:
+            difficulty_enum = DifficultyLevel(difficulty)
+            query = query.filter(GeneratedSentence.difficulty == difficulty_enum)
+        
+        if approval_status:
+            approval_status_enum = ApprovalStatus(approval_status)
+            query = query.filter(GeneratedSentence.approval_status == approval_status_enum)
+        
+        # Get total count for pagination
+        total = query.count()
+        
+        # Apply pagination
+        offset = (page - 1) * per_page
+        sentences = query.offset(offset).limit(per_page).all()
+        
+        return jsonify({
+            'sentences': [sentence.to_dict() for sentence in sentences],
+            'total': total,
+            'page': page,
+            'per_page': per_page
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error getting sentences: {str(e)}")
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+
 @sentence_admin_bp.route('/search', methods=['GET'])
 @jwt_required()
 def search_sentences():
@@ -237,26 +449,56 @@ def search_sentences():
         schema = SearchSchema()
         args = schema.load(request.args)
         
-        difficulty_enum = None
+        # Import here to avoid circular imports
+        from app.models.generated_sentence import GeneratedSentence
+        
+        # Build query
+        query = GeneratedSentence.query
+        
+        # Apply search filters
+        if args.get('search'):
+            query = query.filter(GeneratedSentence.text.ilike(f"%{args['search']}%"))
+        
+        if args.get('target_word'):
+            query = query.filter(GeneratedSentence.target_word.ilike(f"%{args['target_word']}%"))
+        
         if args.get('difficulty'):
             difficulty_enum = DifficultyLevel(args['difficulty'])
+            query = query.filter(GeneratedSentence.difficulty == difficulty_enum)
         
-        approval_status_enum = None
         if args.get('approval_status'):
             approval_status_enum = ApprovalStatus(args['approval_status'])
+            query = query.filter(GeneratedSentence.approval_status == approval_status_enum)
         
-        sentences = admin_service.search_sentences(
-            query=args['query'],
-            difficulty=difficulty_enum,
-            approval_status=approval_status_enum,
-            limit=args['limit']
-        )
+        # Category filter - convert category_id to source_category
+        if args.get('category_id'):
+            # Get the category mapping by querying existing categories
+            category_data = db.session.query(
+                GeneratedSentence.source_category,
+                func.count(GeneratedSentence.id).label('count')
+            ).group_by(GeneratedSentence.source_category).all()
+            
+            # Create a mapping from ID to source_category
+            category_id = args['category_id']
+            if category_id <= len(category_data):
+                source_category = category_data[category_id - 1][0]  # ID is 1-indexed
+                query = query.filter(GeneratedSentence.source_category == source_category)
+        
+        # Get total count for pagination
+        total = query.count()
+        
+        # Apply pagination
+        page = args.get('page', 1)
+        per_page = args.get('per_page', 20)
+        offset = (page - 1) * per_page
+        
+        sentences = query.offset(offset).limit(per_page).all()
         
         return jsonify({
-            'success': True,
             'sentences': [sentence.to_dict() for sentence in sentences],
-            'count': len(sentences),
-            'query': args['query']
+            'total': total,
+            'page': page,
+            'per_page': per_page
         }), 200
         
     except ValidationError as e:

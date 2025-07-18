@@ -1,0 +1,361 @@
+/**
+ * Mastery Overview Component Styles
+ */
+
+.mastery-overview {
+  color: white;
+}
+
+.mastery-overview h2 {
+  color: white;
+  margin-bottom: 2rem;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.mastery-overview h4 {
+  color: white;
+  margin: 0 0 1rem 0;
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+/* Primary Stats Grid */
+.primary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  opacity: 0.9;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+.stat-percentage {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+/* Progress Section */
+.progress-section {
+  margin-bottom: 2rem;
+}
+
+.progress-item {
+  margin-bottom: 1.5rem;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.progress-label {
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.progress-percentage {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.progress-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.mastery-fill {
+  background: linear-gradient(90deg, #ffd700, #ffed4e);
+}
+
+.learning-fill {
+  background: linear-gradient(90deg, #4ade80, #84cc16);
+}
+
+.progress-detail {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* Performance Metrics */
+.performance-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.metric-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.performance-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.performance-badge.excellent {
+  background: #10b981;
+  color: white;
+}
+
+.performance-badge.good {
+  background: #3b82f6;
+  color: white;
+}
+
+.performance-badge.fair {
+  background: #f59e0b;
+  color: white;
+}
+
+.performance-badge.needs-improvement {
+  background: #ef4444;
+  color: white;
+}
+
+.metric-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* Mastery Distribution */
+.mastery-distribution {
+  margin-bottom: 2rem;
+}
+
+.distribution-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+}
+
+.distribution-item {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.distribution-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.distribution-count {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.distribution-label {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.distribution-item.new {
+  border-left: 4px solid #ef4444;
+}
+
+.distribution-item.learning {
+  border-left: 4px solid #f59e0b;
+}
+
+.distribution-item.familiar {
+  border-left: 4px solid #3b82f6;
+}
+
+.distribution-item.proficient {
+  border-left: 4px solid #8b5cf6;
+}
+
+.distribution-item.mastered {
+  border-left: 4px solid #10b981;
+}
+
+/* Quick Actions */
+.quick-actions h4 {
+  margin-bottom: 1rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.action-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.button-icon {
+  font-size: 1.1rem;
+}
+
+.review-button {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none;
+}
+
+.practice-button {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: none;
+}
+
+.browse-button {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .primary-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .performance-metrics {
+    grid-template-columns: 1fr;
+  }
+  
+  .distribution-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-button {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .primary-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .distribution-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .stat-number {
+    font-size: 1.5rem;
+  }
+  
+  .metric-value {
+    font-size: 2rem;
+  }
+}

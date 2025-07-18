@@ -1,0 +1,35 @@
+.library-edit-modal .ant-modal-body {
+  padding: 24px;
+}
+
+.library-edit-modal .processing-container {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.library-edit-modal .completed-container {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.library-edit-modal .ant-progress {
+  margin: 20px 0;
+}
+
+.library-edit-modal .ant-statistic {
+  text-align: center;
+}
+
+.library-edit-modal .ant-form-item-explain {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.library-edit-modal .ant-alert {
+  margin-bottom: 16px;
+}
+
+.library-edit-modal .ant-divider {
+  margin: 24px 0;
+}

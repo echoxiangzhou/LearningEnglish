@@ -139,27 +139,22 @@ class AudioPlaybackService:
             speech_rate = self._calculate_speech_rate(speed)
             
             # Generate audio with TTS service
-            result = self.tts_service.generate_speech(
+            audio_file = self.tts_service.generate_audio(
                 text=text,
-                voice_settings={
-                    'speed': speech_rate,
-                    'pitch': 1.0,  # Keep pitch normal
-                    'volume': 1.0
-                }
+                voice='af_bella',
+                speed=speech_rate
             )
             
-            if result['success']:
-                audio_data = result.get('audio_data')
-                if audio_data:
-                    # Estimate duration (rough calculation)
-                    word_count = len(text.split())
-                    duration = word_count * 0.5 / speed  # Rough estimate
-                    
-                    return {
-                        'audio_data': audio_data,
-                        'duration': duration,
-                        'format': 'mp3'
-                    }
+            if audio_file:
+                # Estimate duration (rough calculation)
+                word_count = len(text.split())
+                duration = word_count * 0.5 / speed  # Rough estimate
+                
+                return {
+                    'audio_file': audio_file,
+                    'duration': duration,
+                    'format': 'mp3'
+                }
             
             return None
             

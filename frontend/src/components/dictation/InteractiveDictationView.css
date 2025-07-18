@@ -1,0 +1,253 @@
+.interactive-dictation-view {
+  position: relative;
+  min-height: 500px;
+  padding: 40px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+/* 中文提示页面 */
+.chinese-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.chinese-sentence-large {
+  font-size: 48px;
+  font-weight: bold;
+  color: #262626;
+  margin-bottom: 60px;
+  line-height: 1.5;
+}
+
+/* 听音频页面 */
+.listening-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.chinese-sentence-medium {
+  font-size: 36px;
+  font-weight: 500;
+  color: #595959;
+  margin-bottom: 40px;
+}
+
+.audio-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.audio-controls .ant-btn-circle {
+  width: 80px;
+  height: 80px;
+  font-size: 32px;
+}
+
+.audio-hint {
+  font-size: 16px;
+  color: #8c8c8c;
+}
+
+/* 练习页面 */
+.practicing-view {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.chinese-hint {
+  font-size: 24px;
+  color: #595959;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.sentence-display {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 32px;
+  line-height: 1.8;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.word-fixed {
+  color: #262626;
+  font-weight: 500;
+}
+
+.word-blank {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 120px;
+  border-bottom: 3px solid #d9d9d9;
+  transition: all 0.3s;
+}
+
+.word-blank.current {
+  border-bottom-color: #1890ff;
+}
+
+.word-blank.correct {
+  border-bottom-color: #52c41a;
+}
+
+.word-blank.incorrect {
+  border-bottom-color: #ff4d4f;
+}
+
+.word-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 32px;
+  font-weight: 500;
+  text-align: center;
+  background: transparent;
+  color: #262626;
+}
+
+.word-input::placeholder {
+  color: #bfbfbf;
+}
+
+.word-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  font-weight: 500;
+  color: #262626;
+}
+
+.status-icon {
+  font-size: 20px;
+}
+
+.status-icon.anticon-check-circle {
+  color: #52c41a;
+}
+
+.status-icon.anticon-close-circle {
+  color: #ff4d4f;
+}
+
+.phonetic-hint {
+  text-align: center;
+  font-size: 18px;
+  color: #8c8c8c;
+  font-style: italic;
+}
+
+.practice-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+/* 复习页面 */
+.reviewing-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  text-align: center;
+}
+
+.reviewing-view h2 {
+  font-size: 32px;
+  color: #52c41a;
+  margin-bottom: 20px;
+}
+
+.complete-sentence {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding: 30px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.word-review {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px;
+  min-width: 100px;
+}
+
+.word-english {
+  font-size: 28px;
+  font-weight: bold;
+  color: #262626;
+}
+
+.word-phonetic {
+  font-size: 16px;
+  color: #8c8c8c;
+  font-style: italic;
+}
+
+.word-chinese {
+  font-size: 18px;
+  color: #595959;
+}
+
+.chinese-complete {
+  font-size: 28px;
+  color: #595959;
+  margin-top: 20px;
+}
+
+.review-actions {
+  margin-top: 30px;
+}
+
+/* 进度条 */
+.ant-progress {
+  margin-top: 20px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .chinese-sentence-large {
+    font-size: 36px;
+  }
+  
+  .chinese-sentence-medium {
+    font-size: 28px;
+  }
+  
+  .sentence-display {
+    font-size: 24px;
+  }
+  
+  .word-input {
+    font-size: 24px;
+  }
+  
+  .word-english {
+    font-size: 22px;
+  }
+}

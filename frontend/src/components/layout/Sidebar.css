@@ -1,0 +1,227 @@
+/* Sidebar Styles */
+
+.sidebar {
+  background: #001529 !important;
+  z-index: 100;
+}
+
+.sidebar .ant-layout-sider-children {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Logo Section */
+.sidebar-logo {
+  padding: 16px;
+  border-bottom: 1px solid #303030;
+}
+
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  font-size: 28px;
+  color: #1890ff;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+/* User Info Section */
+.sidebar-user-info {
+  padding: 20px 16px;
+  border-bottom: 1px solid #303030;
+  text-align: center;
+}
+
+.user-avatar {
+  margin-bottom: 12px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  gap: 4px;
+}
+
+.user-progress {
+  margin-bottom: 12px;
+}
+
+.user-progress .ant-progress-bg {
+  background: #52c41a !important;
+}
+
+.daily-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.daily-progress .ant-progress-bg {
+  background: #1890ff !important;
+}
+
+/* Navigation Menu */
+.sidebar-menu {
+  flex: 1;
+  border-right: none;
+  background: transparent;
+  padding: 8px 0;
+}
+
+.sidebar-menu .ant-menu-item {
+  margin: 2px 8px;
+  border-radius: 6px;
+  height: 40px;
+  line-height: 40px;
+}
+
+.sidebar-menu .ant-menu-submenu {
+  margin: 2px 8px;
+}
+
+.sidebar-menu .ant-menu-item-selected {
+  background: #1890ff !important;
+  color: #fff !important;
+}
+
+.sidebar-menu .ant-menu-item:hover {
+  background: rgba(24, 144, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+.sidebar-menu .ant-menu-item a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sidebar-menu .ant-menu-item-group-title {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 24px 4px;
+}
+
+.sidebar-menu .ant-menu-divider {
+  background: #303030;
+  margin: 8px 16px;
+}
+
+/* Menu Icons */
+.sidebar-menu .ant-menu-item-icon {
+  font-size: 16px;
+}
+
+/* Badge in Menu Items */
+.sidebar-menu .ant-menu-item .ant-badge {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Footer */
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid #303030;
+  text-align: center;
+}
+
+/* Collapsed State Adjustments */
+.ant-layout-sider-collapsed .sidebar-user-info {
+  display: none;
+}
+
+.ant-layout-sider-collapsed .logo-text {
+  display: none;
+}
+
+.ant-layout-sider-collapsed .sidebar-footer {
+  display: none;
+}
+
+.ant-layout-sider-collapsed .sidebar-menu .ant-menu-item {
+  margin: 2px 4px;
+  padding: 0 calc(50% - 8px);
+}
+
+/* Mobile Sidebar */
+@media (max-width: 768px) {
+  .mobile-sidebar {
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+  }
+  
+  .mobile-sidebar.ant-layout-sider-collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+  }
+}
+
+/* Scrollbar Styling */
+.sidebar .ant-layout-sider-children::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar .ant-layout-sider-children::-webkit-scrollbar-track {
+  background: #001529;
+}
+
+.sidebar .ant-layout-sider-children::-webkit-scrollbar-thumb {
+  background: #303030;
+  border-radius: 3px;
+}
+
+.sidebar .ant-layout-sider-children::-webkit-scrollbar-thumb:hover {
+  background: #404040;
+}
+
+/* Theme Specific Adjustments */
+.theme-dark .sidebar {
+  background: #000 !important;
+}
+
+.theme-dark .sidebar-logo {
+  border-bottom-color: #222;
+}
+
+.theme-dark .sidebar-user-info {
+  border-bottom-color: #222;
+}
+
+.theme-dark .sidebar-menu .ant-menu-divider {
+  background: #222;
+}
+
+.theme-dark .sidebar-footer {
+  border-top-color: #222;
+}
+
+/* Animation and Transitions */
+.sidebar * {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ant-layout-sider-trigger {
+  background: #002140 !important;
+  color: #fff !important;
+  border-top: 1px solid #303030;
+}
+
+.theme-dark .ant-layout-sider-trigger {
+  background: #111 !important;
+  border-top-color: #222;
+}

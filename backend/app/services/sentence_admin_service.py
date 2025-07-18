@@ -319,6 +319,7 @@ class SentenceAdminService:
     
     def search_sentences(self, query: str, difficulty: Optional[DifficultyLevel] = None,
                         approval_status: Optional[ApprovalStatus] = None,
+                        source_category: Optional[str] = None,
                         limit: int = 50) -> List[GeneratedSentence]:
         """Search sentences by text content or target word"""
         try:
@@ -338,6 +339,9 @@ class SentenceAdminService:
             
             if approval_status:
                 base_query = base_query.filter_by(approval_status=approval_status)
+            
+            if source_category:
+                base_query = base_query.filter_by(source_category=source_category)
             
             return base_query.order_by(
                 GeneratedSentence.created_at.desc()

@@ -1,0 +1,141 @@
+/* Header Styles */
+
+.site-layout-header {
+  padding: 0 24px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  z-index: 10;
+  position: relative;
+}
+
+.theme-dark .site-layout-header {
+  background: #001529;
+  border-bottom: 1px solid #303030;
+}
+
+/* Header Left Section */
+.header-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.sidebar-toggle {
+  margin-right: 16px;
+  color: #666;
+}
+
+.theme-dark .sidebar-toggle {
+  color: #ccc;
+}
+
+.header-breadcrumb {
+  margin: 0;
+}
+
+.header-breadcrumb .ant-breadcrumb-link {
+  color: #666;
+}
+
+.theme-dark .header-breadcrumb .ant-breadcrumb-link {
+  color: #ccc;
+}
+
+/* Header Right Section */
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.theme-toggle,
+.language-selector,
+.notification-button {
+  color: #666;
+  border: none;
+  background: transparent;
+}
+
+.theme-dark .theme-toggle,
+.theme-dark .language-selector,
+.theme-dark .notification-button {
+  color: #ccc;
+}
+
+.theme-toggle:hover,
+.language-selector:hover,
+.notification-button:hover {
+  color: #1890ff;
+  background: rgba(24, 144, 255, 0.1);
+}
+
+/* User Menu */
+.user-menu-trigger {
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.user-menu-trigger:hover {
+  background: rgba(24, 144, 255, 0.1);
+}
+
+.username {
+  color: #666;
+  font-weight: 500;
+}
+
+.theme-dark .username {
+  color: #ccc;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .site-layout-header {
+    padding: 0 16px;
+  }
+  
+  .header-breadcrumb {
+    display: none;
+  }
+  
+  .sidebar-toggle {
+    margin-right: 8px;
+  }
+}
+
+@media (max-width: 576px) {
+  .site-layout-header {
+    padding: 0 12px;
+  }
+  
+  .header-right .ant-space {
+    gap: 8px !important;
+  }
+  
+  .username {
+    display: none;
+  }
+}
+
+/* Notification Badge */
+.ant-badge-count {
+  background: #ff4d4f;
+  border: 1px solid #fff;
+}
+
+.theme-dark .ant-badge-count {
+  border-color: #141414;
+}
+
+/* Dropdown Menus */
+.ant-dropdown-menu-item-danger {
+  color: #ff4d4f;
+}
+
+.ant-dropdown-menu-item-danger:hover {
+  background: rgba(255, 77, 79, 0.1);
+}

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Input, Button, Tag, Space, Tooltip, message } from 'antd';
-import { SoundOutlined, BulbOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import { DictationSession, WordInput, HintInfo } from '../../types/dictation';
-import { dictationService } from '../../services/dictationService';
+import { Card, Input, Button, Tag, Space, Tooltip, message, Progress } from 'antd';
+import { SoundOutlined, BulbOutlined, CheckCircleOutlined, CloseCircleOutlined, PauseOutlined, LoadingOutlined } from '@ant-design/icons';
+import type { DictationSession, WordInput, HintInfo } from '../../types/dictation';
+import { ttsService } from '../../services/ttsService';
 import './SentenceDisplay.css';
 
 interface SentenceDisplayProps {
@@ -12,6 +12,8 @@ interface SentenceDisplayProps {
   onHintRequest: (position: number, hintType: 'letter' | 'phonetic' | 'definition' | 'full') => void;
   showChinese?: boolean;
   isAudioPlaying?: boolean;
+  playbackSpeed?: number;
+  autoPlay?: boolean; // 是否自动播放新句子
   className?: string;
 }
 
@@ -22,16 +24,26 @@ const SentenceDisplay: React.FC<SentenceDisplayProps> = ({
   onHintRequest,
   showChinese = true,
   isAudioPlaying = false,
+  playbackSpeed = 1.0,
+  autoPlay = true,
   className = ''
 }) => {
   const [wordInputs, setWordInputs] = useState<Map<number, WordInput>>(new Map());
-  const [hints, setHints] = useState<Map<number, HintInfo>>(new Map());
-  const [focusedPosition, setFocusedPosition] = useState<number | null>(null);
+  const [hints] = useState<Map<number, HintInfo>>(new Map());
+  const [audioState, setAudioState] = useState({
+    isPlaying: false,
+    isLoading: false,
+    currentTime: 0,
+    duration: 0,
+    error: null as string | null
+  });
   const inputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
+  const lastSentenceRef = useRef<string>(''); // 跟踪上一次播放的句子
 
   const { session_data } = session;
   const words = session_data.words || [];
   const chineseTranslation = session_data.chinese_translation || '';
+  const sentenceText = session_data.sentence_text || '';
 
   // 初始化输入状态
   useEffect(() => {
@@ -49,6 +61,91 @@ const SentenceDisplay: React.FC<SentenceDisplayProps> = ({
     });
     setWordInputs(newInputs);
   }, [words]);
+
+  // 清理音频资源
+  useEffect(() => {
+    return () => {
+      ttsService.stopCurrentAudio();
+    };
+  }, []);
+
+  // 自动播放新句子
+  useEffect(() => {
+    if (autoPlay && sentenceText && sentenceText !== lastSentenceRef.current) {
+      // 延迟播放，确保组件完全加载
+      const autoPlayTimer = setTimeout(() => {
+        if (sentenceText && sentenceText !== lastSentenceRef.current) {
+          lastSentenceRef.current = sentenceText;
+          handleAutoPlay();
+        }
+      }, 300);
+
+      return () => clearTimeout(autoPlayTimer);
+    }
+  }, [sentenceText, autoPlay]);
+
+  // 自动播放处理函数
+  const handleAutoPlay = async () => {
+    if (!sentenceText || audioState.isPlaying) {
+      return;
+    }
+
+    try {
+      setAudioState(prev => ({ 
+        ...prev, 
+        isLoading: true, 
+        error: null 
+      }));
+
+      await ttsService.speakText(sentenceText, {
+        speed: playbackSpeed,
+        voice: 'af_bella',
+        provider: 'kokoro',
+        onProgress: (currentTime: number, duration: number) => {
+          setAudioState(prev => ({
+            ...prev,
+            currentTime,
+            duration: duration || 0
+          }));
+        },
+        onEnd: () => {
+          setAudioState(prev => ({
+            ...prev,
+            isPlaying: false,
+            currentTime: 0
+          }));
+        },
+        onError: (error: Error) => {
+          setAudioState(prev => ({
+            ...prev,
+            isPlaying: false,
+            isLoading: false,
+            error: error.message
+          }));
+          console.warn('自动播放失败:', error.message);
+        }
+      });
+
+      setAudioState(prev => ({
+        ...prev,
+        isPlaying: true,
+        isLoading: false
+      }));
+
+      // 调用原来的音频播放回调
+      onAudioPlay();
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      setAudioState(prev => ({
+        ...prev,
+        isPlaying: false,
+        isLoading: false,
+        error: errorMessage
+      }));
+      console.warn('自动播放失败:', errorMessage);
+    }
+  };
 
   // 处理输入变化
   const handleInputChange = (position: number, value: string) => {
@@ -96,7 +193,6 @@ const SentenceDisplay: React.FC<SentenceDisplayProps> = ({
     const input = inputRefs.current.get(position);
     if (input) {
       input.focus();
-      setFocusedPosition(position);
     }
   };
 
@@ -124,6 +220,101 @@ const SentenceDisplay: React.FC<SentenceDisplayProps> = ({
     }
   };
 
+  // 检查是否为标点符号
+  const isPunctuation = (text: string): boolean => {
+    const punctuationRegex = /^[^\w\s]$/;
+    return punctuationRegex.test(text);
+  };
+
+  // 检查文本是否包含标点符号
+  const containsPunctuation = (text: string): boolean => {
+    const punctuationRegex = /[^\w\s]/g;
+    return punctuationRegex.test(text);
+  };
+
+  // 分离单词和标点符号
+  const separateWordAndPunctuation = (text: string): { word: string; punctuation: string } => {
+    const match = text.match(/^(\w+)([^\w\s]*)$/);
+    if (match) {
+      return {
+        word: match[1],
+        punctuation: match[2]
+      };
+    }
+    return { word: text, punctuation: '' };
+  };
+
+  // 处理TTS音频播放
+  const handleTTSPlay = async () => {
+    if (!sentenceText) {
+      message.error('没有可播放的句子内容');
+      return;
+    }
+
+    if (audioState.isPlaying) {
+      // 如果正在播放，则停止
+      ttsService.stopCurrentAudio();
+      setAudioState(prev => ({ ...prev, isPlaying: false }));
+      return;
+    }
+
+    try {
+      setAudioState(prev => ({ 
+        ...prev, 
+        isLoading: true, 
+        error: null 
+      }));
+
+      await ttsService.speakText(sentenceText, {
+        speed: playbackSpeed,
+        voice: 'af_bella', // 使用Kokoro的默认女声
+        provider: 'kokoro',
+        onProgress: (currentTime: number, duration: number) => {
+          setAudioState(prev => ({
+            ...prev,
+            currentTime,
+            duration: duration || 0
+          }));
+        },
+        onEnd: () => {
+          setAudioState(prev => ({
+            ...prev,
+            isPlaying: false,
+            currentTime: 0
+          }));
+        },
+        onError: (error: Error) => {
+          setAudioState(prev => ({
+            ...prev,
+            isPlaying: false,
+            isLoading: false,
+            error: error.message
+          }));
+          message.error(`播放失败: ${error.message}`);
+        }
+      });
+
+      setAudioState(prev => ({
+        ...prev,
+        isPlaying: true,
+        isLoading: false
+      }));
+
+      // 同时调用原来的音频播放回调
+      onAudioPlay();
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      setAudioState(prev => ({
+        ...prev,
+        isPlaying: false,
+        isLoading: false,
+        error: errorMessage
+      }));
+      message.error(`播放失败: ${errorMessage}`);
+    }
+  };
+
   // 获取输入框状态样式
   const getInputStatus = (position: number): 'default' | 'success' | 'error' => {
     const word = words.find(w => w.position === position);
@@ -135,6 +326,17 @@ const SentenceDisplay: React.FC<SentenceDisplayProps> = ({
   // 渲染单词或输入框
   const renderWordOrInput = (word: any, index: number) => {
     if (!word.is_blank) {
+      // 对于非空白单词，检查是否包含标点符号并分别显示
+      if (containsPunctuation(word.word)) {
+        const { word: wordPart, punctuation } = separateWordAndPunctuation(word.word);
+        return (
+          <span key={index} className="word-display">
+            <span className="word-text">{wordPart}</span>
+            <span className="punctuation-display">{punctuation}</span>
+          </span>
+        );
+      }
+      
       return (
         <span key={index} className="word-display">
           {word.word}
@@ -147,26 +349,43 @@ const SentenceDisplay: React.FC<SentenceDisplayProps> = ({
     const status = getInputStatus(word.position);
     const isCorrect = word.is_correct;
 
+    // 检查原始单词是否包含标点符号
+    const originalWord = word.original || word.word;
+    const hasPunctuation = containsPunctuation(originalWord);
+    const { word: wordPart, punctuation } = hasPunctuation ? 
+      separateWordAndPunctuation(originalWord) : 
+      { word: originalWord, punctuation: '' };
+
     return (
       <span key={index} className={`word-input-container ${status}`}>
         <div className="input-wrapper">
-          <Input
-            ref={(el) => {
-              if (el) {
-                inputRefs.current.set(word.position, el.input!);
-              }
-            }}
-            value={input?.value || ''}
-            onChange={(e) => handleInputChange(word.position, e.target.value)}
-            onKeyDown={(e) => handleKeyPress(e, word.position)}
-            onFocus={() => setFocusedPosition(word.position)}
-            onBlur={() => setFocusedPosition(null)}
-            placeholder={`___`}
-            className={`word-input ${status}`}
-            size="small"
-            disabled={isCorrect}
-            status={status === 'error' ? 'error' : undefined}
-          />
+          <div className="input-with-punctuation">
+            <Input
+              ref={(el) => {
+                if (el) {
+                  inputRefs.current.set(word.position, el.input!);
+                }
+              }}
+              value={input?.value || ''}
+              onChange={(e) => handleInputChange(word.position, e.target.value)}
+              onKeyDown={(e) => handleKeyPress(e, word.position)}
+              onFocus={() => {}}
+              onBlur={() => {}}
+              placeholder={`___`}
+              className={`word-input ${status}`}
+              size="small"
+              disabled={isCorrect}
+              status={status === 'error' ? 'error' : undefined}
+              style={{ display: 'inline-block', width: 'auto', minWidth: '60px' }}
+            />
+            
+            {/* 自动显示标点符号 */}
+            {punctuation && (
+              <span className="auto-punctuation" title="标点符号会自动显示">
+                {punctuation}
+              </span>
+            )}
+          </div>
           
           {/* 正确/错误状态图标 */}
           {isCorrect === true && (
@@ -221,16 +440,41 @@ const SentenceDisplay: React.FC<SentenceDisplayProps> = ({
         <div className="sentence-header">
           <Space>
             <Tag color="blue">英文句子</Tag>
-            <Button
-              type="text"
-              icon={<SoundOutlined />}
-              onClick={onAudioPlay}
-              loading={isAudioPlaying}
-              className="audio-button"
-              size="small"
-            >
-              播放音频
-            </Button>
+            <div className="audio-controls">
+              <Button
+                type="text"
+                icon={audioState.isLoading ? <LoadingOutlined /> : 
+                      audioState.isPlaying ? <PauseOutlined /> : <SoundOutlined />}
+                onClick={handleTTSPlay}
+                loading={audioState.isLoading}
+                className={`audio-button ${audioState.isPlaying ? 'playing' : ''}`}
+                size="small"
+              >
+                {audioState.isLoading ? '加载中...' :
+                 audioState.isPlaying ? '停止播放' : '播放发音'}
+              </Button>
+              
+              {audioState.duration > 0 && (
+                <div className="audio-progress">
+                  <Progress
+                    percent={audioState.duration > 0 ? 
+                      Math.round((audioState.currentTime / audioState.duration) * 100) : 0}
+                    size="small"
+                    showInfo={false}
+                    strokeColor="#1890ff"
+                  />
+                  <span className="audio-time">
+                    {Math.round(audioState.currentTime)}s / {Math.round(audioState.duration)}s
+                  </span>
+                </div>
+              )}
+              
+              {playbackSpeed !== 1.0 && (
+                <Tag color="orange" size="small">
+                  {playbackSpeed}x 速度
+                </Tag>
+              )}
+            </div>
           </Space>
         </div>
         

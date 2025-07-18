@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  learning-english-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: learning-english-backend
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=false
+      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@postgres-db:5432/learning_english
+      - KOKORO_API_URL=http://learningenglish-kokoro-rndkku:8880
+      - KOKORO_API_KEY=not-needed
+      - SECRET_KEY=${SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - MAIL_SERVER=${MAIL_SERVER}
+      - MAIL_PORT=${MAIL_PORT}
+      - MAIL_USE_TLS=${MAIL_USE_TLS}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MINMAX_API_KEY=${MINMAX_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL}
+    volumes:
+      - backend_static:/app/static
+      - backend_instance:/app/instance
+      - backend_logs:/app/logs
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.learning-english-backend.rule=Host(`eng.dataisbeautiful.top`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.learning-english-backend.entrypoints=websecure"
+      - "traefik.http.routers.learning-english-backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.learning-english-backend.loadbalancer.server.port=5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  dokploy-network:
+    external: true
+
+volumes:
+  backend_static:
+  backend_instance:
+  backend_logs:

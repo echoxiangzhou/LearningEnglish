@@ -45,7 +45,7 @@ class GeneratedSentence(db.Model):
     text = Column(Text, nullable=False)
     target_word = Column(String(100), nullable=False, index=True)
     pattern = Column(SQLEnum(SentencePattern), nullable=False)
-    difficulty = Column(SQLEnum(DifficultyLevel), nullable=False, index=True)
+    difficulty = Column(String(20), nullable=False, index=True)  # Temporarily changed from enum
     
     # Generation metadata
     confidence = Column(Float, default=0.0)
@@ -58,6 +58,10 @@ class GeneratedSentence(db.Model):
     is_validated = Column(Boolean, default=False)
     validation_issues = Column(JSON)  # Store validation issues as JSON
     
+    # Translation and source
+    chinese_translation = Column(Text)
+    source_category = Column(String(100), default='AI generated', index=True)
+    
     # Approval workflow
     approval_status = Column(SQLEnum(ApprovalStatus), default=ApprovalStatus.PENDING, index=True)
     approved_by = Column(Integer, ForeignKey('users.id'), nullable=True)
@@ -66,6 +70,11 @@ class GeneratedSentence(db.Model):
     # Usage tracking
     usage_count = Column(Integer, default=0)
     last_used = Column(DateTime)
+    
+    # Audio generation
+    audio_file_path = Column(String(500))  # Path to pre-generated audio file
+    audio_cache_key = Column(String(64), index=True)  # Cache key for quick lookup
+    audio_generated_at = Column(DateTime)  # When audio was generated
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -84,7 +93,7 @@ class GeneratedSentence(db.Model):
             'text': self.text,
             'target_word': self.target_word,
             'pattern': self.pattern.value,
-            'difficulty': self.difficulty.value,
+            'difficulty': self.difficulty,  # String instead of enum
             'confidence': self.confidence,
             'grammar_score': self.grammar_score,
             'overall_score': self.overall_score,
@@ -92,10 +101,18 @@ class GeneratedSentence(db.Model):
             'appropriateness_score': self.appropriateness_score,
             'is_validated': self.is_validated,
             'validation_issues': self.validation_issues,
+            'chinese_translation': self.chinese_translation,
+            'source_category': self.source_category,
             'approval_status': self.approval_status.value,
             'approval_notes': self.approval_notes,
+            'approved_by': self.approved_by,
+            'approved_at': self.updated_at.isoformat() if self.approval_status == ApprovalStatus.APPROVED else None,
+            'rejection_reason': self.approval_notes if self.approval_status == ApprovalStatus.REJECTED else None,
             'usage_count': self.usage_count,
             'last_used': self.last_used.isoformat() if self.last_used else None,
+            'audio_file_path': self.audio_file_path,
+            'audio_cache_key': self.audio_cache_key,
+            'audio_generated_at': self.audio_generated_at.isoformat() if self.audio_generated_at else None,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }

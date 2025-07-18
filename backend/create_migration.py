@@ -25,9 +25,10 @@ try:
         except:
             print("Migrations already initialized")
         
-        # Create migration for vocabulary models
-        migrate(message="Add vocabulary learning models")
-        print("Migration created successfully")
+        # Create migration with custom message
+        message = sys.argv[1] if len(sys.argv) > 1 else "Add database models"
+        migrate(message=message)
+        print(f"Migration created successfully: {message}")
         
 except ImportError as e:
     print(f"Import error: {e}")

@@ -41,12 +41,21 @@ class KokoroTTSProvider(TTSProviderInterface):
         
     def generate_audio(self, text: str, voice: str = 'af_bella', speed: float = 1.0, **kwargs) -> Optional[str]:
         """Generate audio using Kokoro TTS"""
+        # Check for category-specific directory
+        category = kwargs.get('category', None)
+        if category:
+            category_dir = self.cache_dir / category
+            category_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            category_dir = self.cache_dir
+        
         # Generate cache key
         cache_key = hashlib.md5(f"kokoro_{text}_{voice}_{speed}".encode()).hexdigest()
-        cache_file = self.cache_dir / f"{cache_key}.mp3"
+        cache_file = category_dir / f"{cache_key}.mp3"
         
         # Return cached file if exists
         if cache_file.exists():
+            print(f"KokoroTTS - Using cached file for: {text[:30]}... -> {cache_file.name}")
             return str(cache_file)
         
         try:
@@ -151,11 +160,19 @@ class MiniMaxTTSProvider(TTSProviderInterface):
         volume = kwargs.get('volume', 1.0)
         pitch = kwargs.get('pitch', 0)
         
+        # Check for category-specific directory
+        category = kwargs.get('category', None)
+        if category:
+            category_dir = self.cache_dir / category
+            category_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            category_dir = self.cache_dir
+        
         # Generate cache key
         cache_key = hashlib.md5(
             f"minimax_{text}_{voice}_{speed}_{model}_{emotion}".encode()
         ).hexdigest()
-        cache_file = self.cache_dir / f"{cache_key}.{format}"
+        cache_file = category_dir / f"{cache_key}.{format}"
         
         # Return cached file if exists
         if cache_file.exists():
@@ -240,8 +257,10 @@ class TTSService:
     """Main TTS service that manages multiple providers"""
     
     def __init__(self):
-        # Initialize cache directory
-        self.audio_cache_dir = Path('static/audio_cache')
+        # Initialize cache directory with absolute path
+        import os
+        app_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        self.audio_cache_dir = Path(app_root) / 'static' / 'audio_cache'
         self.audio_cache_dir.mkdir(parents=True, exist_ok=True)
         
         # Initialize providers
@@ -297,8 +316,10 @@ class TTSService:
         
         # Generate audio
         try:
+            print(f"TTSService.generate_audio - Text: {text[:50]}..., Provider: {provider_enum.value}, Voice: {voice}")
             file_path = provider_instance.generate_audio(text, voice, speed, **kwargs)
             if file_path:
+                print(f"TTSService.generate_audio - Generated/Retrieved: {file_path}")
                 return file_path, None
             else:
                 # Try fallback provider if available

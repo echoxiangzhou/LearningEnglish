@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { Card, Select, Radio, Slider, Space, Typography, Button, Row, Col, Tag, Divider } from 'antd';
-import { BookOutlined, SettingOutlined, PlayCircleOutlined } from '@ant-design/icons';
-import { WordLibrary, DictationConfig, DictationMode, WORD_LIBRARIES } from '../../types/dictation';
+import React, { useState, useEffect } from 'react';
+import { Card, Select, Radio, Slider, Space, Typography, Button, Row, Col, Tag, Divider, Checkbox } from 'antd';
+import { BookOutlined, SettingOutlined, PlayCircleOutlined, TagsOutlined, AppstoreOutlined } from '@ant-design/icons';
+import type { DictationConfig, DictationMode, PracticeType } from '../../types/dictation';
+import { WORD_LIBRARIES } from '../../types/dictation';
+import { categoryService } from '../../services/categoryService';
+import type { SentenceCategory } from '../../types/category';
 import './LibrarySelector.css';
 
 const { Title, Text } = Typography;
@@ -21,6 +24,7 @@ const LibrarySelector: React.FC<LibrarySelectorProps> = ({
   className = ''
 }) => {
   const [config, setConfig] = useState<DictationConfig>({
+    practice_type: 'sentence', // 默认句子练习
     library: 'elementary_all',
     mode: 'partial_blank',
     sentence_count: 5,
@@ -28,14 +32,69 @@ const LibrarySelector: React.FC<LibrarySelectorProps> = ({
     show_chinese: true,
     auto_play: true,
     playback_speed: 1.0,
+    categories: [],
+    auto_play_new_sentence: true, // 默认开启自动播放新句子
     ...defaultConfig
   });
+  
+  const [availableCategories, setAvailableCategories] = useState<SentenceCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+
+  useEffect(() => {
+    fetchUserCategories();
+  }, []);
+
+  const fetchUserCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      // 获取当前用户被分配的分类
+      const userCategories = await categoryService.getCurrentUserCategories();
+      setAvailableCategories(userCategories.filter(cat => cat.is_active));
+    } catch (error) {
+      console.error('Error fetching user categories:', error);
+      // 如果获取用户分类失败，尝试获取所有分类作为备选
+      try {
+        const allCategories = await categoryService.getCategories();
+        setAvailableCategories(allCategories.filter(cat => cat.is_active));
+      } catch (fallbackError) {
+        console.error('Error fetching fallback categories:', fallbackError);
+        setAvailableCategories([]);
+      }
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  // 计算选中分类的总句子数
+  const getSelectedCategoriesTotal = () => {
+    if (!config.categories || config.categories.length === 0) {
+      return 0;
+    }
+    return availableCategories
+      .filter(cat => config.categories?.includes(cat.id))
+      .reduce((sum, cat) => sum + cat.sentence_count, 0);
+  };
 
   // 更新配置
   const updateConfig = (updates: Partial<DictationConfig>) => {
     const newConfig = { ...config, ...updates };
     setConfig(newConfig);
     onConfigChange(newConfig);
+  };
+
+  // 当分类选择发生变化时，自动更新句子数量为全部句子数
+  const updateConfigWithCategories = (categories: number[]) => {
+    const totalSentences = availableCategories
+      .filter(cat => categories.includes(cat.id))
+      .reduce((sum, cat) => sum + cat.sentence_count, 0);
+    
+    // 如果有选中的分类且总句子数大于0，自动设置为全部句子数
+    const sentenceCount = totalSentences > 0 ? totalSentences : config.sentence_count;
+    
+    updateConfig({ 
+      categories: categories,
+      sentence_count: sentenceCount
+    });
   };
 
   // 开始练习
@@ -89,21 +148,59 @@ const LibrarySelector: React.FC<LibrarySelectorProps> = ({
 
   return (
     <div className={`library-selector ${className}`}>
-      <Card className="selector-card">
-        <div className="selector-header">
-          <Title level={3}>
-            <BookOutlined style={{ color: '#1890ff', marginRight: 8 }} />
-            听写练习设置
-          </Title>
-          <Text type="secondary">
-            选择词库和练习方式，开始您的英语听写练习
+      <div className="tile-container">
+        {/* 练习类型瓦片 */}
+        <Card className="tile-card" title={
+          <span>
+            <AppstoreOutlined style={{ color: '#1890ff', marginRight: 8 }} />
+            练习类型
+          </span>
+        }>
+          <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+            选择您想要进行的练习类型
           </Text>
-        </div>
+          <Radio.Group
+            value={config.practice_type}
+            onChange={(e) => {
+              const practiceType = e.target.value as PracticeType;
+              updateConfig({ 
+                practice_type: practiceType,
+                // 切换练习类型时重置相关配置
+                categories: practiceType === 'sentence' ? config.categories : [],
+                library: practiceType === 'word' ? config.library : 'elementary_all'
+              });
+            }}
+            size="large"
+            style={{ width: '100%' }}
+          >
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12}>
+                <Radio value="word" className="practice-type-radio">
+                  <div style={{ marginLeft: 8 }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '16px' }}>单词练习</div>
+                    <div style={{ color: '#666', fontSize: '14px', marginTop: 4 }}>
+                      专注于单词听写，提高词汇掌握能力
+                    </div>
+                  </div>
+                </Radio>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Radio value="sentence" className="practice-type-radio">
+                  <div style={{ marginLeft: 8 }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '16px' }}>句子练习</div>
+                    <div style={{ color: '#666', fontSize: '14px', marginTop: 4 }}>
+                      通过完整句子听写，提高语感和语法理解
+                    </div>
+                  </div>
+                </Radio>
+              </Col>
+            </Row>
+          </Radio.Group>
+        </Card>
 
-        <div className="selector-content">
-          {/* 词库选择 */}
-          <div className="config-section">
-            <Title level={4}>选择词库</Title>
+        {/* 词库选择瓦片 - 仅在单词练习时显示 */}
+        {config.practice_type === 'word' && (
+          <Card className="tile-card" title="选择词库">
             <Select
               value={config.library}
               onChange={(value) => updateConfig({ library: value })}
@@ -141,21 +238,114 @@ const LibrarySelector: React.FC<LibrarySelectorProps> = ({
                 </Space>
               </div>
             )}
-          </div>
+          </Card>
+        )}
 
-          <Divider />
+        {/* 句子分类瓦片 - 仅在句子练习时显示 */}
+        {config.practice_type === 'sentence' && (
+          <Card className="tile-card" title={
+            <span>
+              <TagsOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+              句子分类
+            </span>
+          }>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+              选择您想要练习的句子分类（可多选）
+            </Text>
+            
+            {loadingCategories ? (
+              <div style={{ textAlign: 'center', padding: '20px' }}>
+                <Text type="secondary">加载分类中...</Text>
+              </div>
+            ) : availableCategories.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '20px', background: '#f5f5f5', borderRadius: '8px' }}>
+                <TagsOutlined style={{ fontSize: '24px', color: '#d9d9d9', marginBottom: '8px' }} />
+                <div>
+                  <Text type="secondary">暂无可用分类</Text>
+                </div>
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  管理员尚未为您分配句子分类
+                </Text>
+              </div>
+            ) : (
+              <div className="category-selection">
+                <Checkbox.Group
+                  value={config.categories}
+                  onChange={(checkedValues) => updateConfigWithCategories(checkedValues as number[])}
+                  style={{ width: '100%' }}
+                >
+                  <Row gutter={[16, 12]}>
+                    {availableCategories.map(category => (
+                      <Col xs={24} sm={12} md={8} lg={6} xl={4} key={category.id}>
+                        <Card 
+                          size="small" 
+                          className={`category-card ${config.categories?.includes(category.id) ? 'selected' : ''}`}
+                          style={{ 
+                            cursor: 'pointer',
+                            border: config.categories?.includes(category.id) ? '2px solid #1890ff' : '1px solid #f0f0f0'
+                          }}
+                          onClick={() => {
+                            const currentCategories = config.categories || [];
+                            const newCategories = currentCategories.includes(category.id)
+                              ? currentCategories.filter(id => id !== category.id)
+                              : [...currentCategories, category.id];
+                            updateConfigWithCategories(newCategories);
+                          }}
+                        >
+                          <div style={{ textAlign: 'center' }}>
+                            <Checkbox value={category.id} style={{ marginBottom: 8 }}>
+                              <Text strong style={{ fontSize: '13px' }}>{category.name}</Text>
+                            </Checkbox>
+                            <div>
+                              <Tag 
+                                color={
+                                  category.difficulty === 'elementary' ? 'green' :
+                                  category.difficulty === 'intermediate' ? 'orange' : 'red'
+                                }
+                                size="small"
+                              >
+                                {category.difficulty === 'elementary' ? '初级' :
+                                 category.difficulty === 'intermediate' ? '中级' : '高级'}
+                              </Tag>
+                            </div>
+                            <Text type="secondary" style={{ fontSize: '11px' }}>
+                              {category.sentence_count} 个句子
+                            </Text>
+                          </div>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </Checkbox.Group>
+                
+                {config.categories && config.categories.length > 0 && (
+                  <div style={{ marginTop: 16, padding: '12px', background: '#f6ffed', borderRadius: '6px', border: '1px solid #b7eb8f' }}>
+                    <Text style={{ color: '#52c41a', fontSize: '13px' }}>
+                      <TagsOutlined style={{ marginRight: 4 }} />
+                      已选择 {config.categories.length} 个分类，
+                      共 {availableCategories
+                        .filter(cat => config.categories?.includes(cat.id))
+                        .reduce((sum, cat) => sum + cat.sentence_count, 0)} 个句子可用于练习
+                    </Text>
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+        )}
 
-          {/* 练习模式 */}
-          <div className="config-section">
-            <Title level={4}>练习模式</Title>
-            <Radio.Group
-              value={config.mode}
-              onChange={(e) => updateConfig({ mode: e.target.value })}
-              className="mode-radio-group"
-            >
-              <Space direction="vertical" size="middle">
-                {modeOptions.map(option => (
-                  <Radio key={option.value} value={option.value} className="mode-radio">
+        {/* 练习模式瓦片 - 仅在句子练习时显示 */}
+        {config.practice_type === 'sentence' && (
+        <Card className="tile-card" title="练习模式">
+          <Radio.Group
+            value={config.mode}
+            onChange={(e) => updateConfig({ mode: e.target.value })}
+            className="mode-radio-group"
+          >
+            <Row gutter={[16, 16]}>
+              {modeOptions.map(option => (
+                <Col xs={24} sm={8} key={option.value}>
+                  <Radio value={option.value} className="mode-radio">
                     <div className="mode-content">
                       <div className="mode-label">{option.label}</div>
                       <div className="mode-description">
@@ -163,142 +353,166 @@ const LibrarySelector: React.FC<LibrarySelectorProps> = ({
                       </div>
                     </div>
                   </Radio>
-                ))}
-              </Space>
-            </Radio.Group>
-          </div>
-
-          <Divider />
-
-          {/* 练习设置 */}
-          <div className="config-section">
-            <Title level={4}>
-              <SettingOutlined style={{ marginRight: 8 }} />
-              练习设置
-            </Title>
-            
-            <Row gutter={[24, 16]}>
-              <Col xs={24} sm={12}>
-                <div className="setting-item">
-                  <Text strong>句子数量</Text>
-                  <Select
-                    value={config.sentence_count}
-                    onChange={(value) => updateConfig({ sentence_count: value })}
-                    style={{ width: '100%', marginTop: 8 }}
-                  >
-                    <Option value={3}>3句 (快速练习)</Option>
-                    <Option value={5}>5句 (标准练习)</Option>
-                    <Option value={10}>10句 (强化练习)</Option>
-                    <Option value={15}>15句 (深度练习)</Option>
-                  </Select>
-                </div>
-              </Col>
-              
-              <Col xs={24} sm={12}>
-                <div className="setting-item">
-                  <Text strong>难度级别</Text>
-                  <div style={{ marginTop: 8 }}>
-                    <Slider
-                      value={config.difficulty_level}
-                      onChange={(value) => updateConfig({ difficulty_level: value })}
-                      min={1}
-                      max={5}
-                      marks={{
-                        1: '1',
-                        2: '2',
-                        3: '3',
-                        4: '4',
-                        5: '5'
-                      }}
-                      tooltip={{
-                        formatter: (value) => getDifficultyLabel(value || 3)
-                      }}
-                    />
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                      当前：{getDifficultyLabel(config.difficulty_level)}
-                    </Text>
-                  </div>
-                </div>
-              </Col>
-              
-              <Col xs={24} sm={12}>
-                <div className="setting-item">
-                  <Text strong>播放速度</Text>
-                  <div style={{ marginTop: 8 }}>
-                    <Slider
-                      value={config.playback_speed}
-                      onChange={(value) => updateConfig({ playback_speed: value })}
-                      min={0.5}
-                      max={2.0}
-                      step={0.25}
-                      marks={{
-                        0.5: '0.5x',
-                        1.0: '1.0x',
-                        1.5: '1.5x',
-                        2.0: '2.0x'
-                      }}
-                      tooltip={{
-                        formatter: (value) => `${value}x ${getSpeedLabel(value || 1.0)}`
-                      }}
-                    />
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                      当前：{config.playback_speed}x {getSpeedLabel(config.playback_speed)}
-                    </Text>
-                  </div>
-                </div>
-              </Col>
-              
-              <Col xs={24} sm={12}>
-                <div className="setting-item">
-                  <Text strong>其他选项</Text>
-                  <div style={{ marginTop: 8 }}>
-                    <Space direction="vertical">
-                      <label className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          checked={config.show_chinese}
-                          onChange={(e) => updateConfig({ show_chinese: e.target.checked })}
-                        />
-                        <span>显示中文翻译</span>
-                      </label>
-                      <label className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          checked={config.auto_play}
-                          onChange={(e) => updateConfig({ auto_play: e.target.checked })}
-                        />
-                        <span>自动播放音频</span>
-                      </label>
-                    </Space>
-                  </div>
-                </div>
-              </Col>
+                </Col>
+              ))}
             </Row>
-          </div>
-        </div>
+          </Radio.Group>
+        </Card>
+        )}
 
-        {/* 开始按钮 */}
-        <div className="selector-footer">
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlayCircleOutlined />}
-            onClick={handleStartPractice}
-            className="start-button"
-            block
-          >
-            开始听写练习
-          </Button>
-          
-          <div className="config-summary">
-            <Text type="secondary" style={{ fontSize: '12px' }}>
-              将练习：{selectedLibrary?.name} • {config.sentence_count}个句子 • 
-              {modeOptions.find(m => m.value === config.mode)?.label} • 
-              难度{config.difficulty_level}级
-            </Text>
+        {/* 练习设置瓦片 */}
+        <Card className="tile-card" title={
+          <span>
+            <SettingOutlined style={{ marginRight: 8 }} />
+            练习设置
+          </span>
+        }>
+          <Row gutter={[24, 16]}>
+            <Col xs={24} sm={12}>
+              <div className="setting-item">
+                <Text strong>句子数量</Text>
+                <Select
+                  value={config.sentence_count}
+                  onChange={(value) => updateConfig({ sentence_count: value })}
+                  style={{ width: '100%', marginTop: 8 }}
+                >
+                  <Option value={3}>3句 (快速练习)</Option>
+                  <Option value={5}>5句 (标准练习)</Option>
+                  <Option value={10}>10句 (强化练习)</Option>
+                  <Option value={15}>15句 (深度练习)</Option>
+                  {getSelectedCategoriesTotal() > 0 && (
+                    <Option value={getSelectedCategoriesTotal()}>
+                      全部句子 ({getSelectedCategoriesTotal()}句)
+                    </Option>
+                  )}
+                </Select>
+                {getSelectedCategoriesTotal() > 0 && (
+                  <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: 4 }}>
+                    选中分类共有 {getSelectedCategoriesTotal()} 个句子可用于练习
+                  </Text>
+                )}
+              </div>
+            </Col>
+            
+            <Col xs={24} sm={12}>
+              <div className="setting-item">
+                <Text strong>难度级别</Text>
+                <div style={{ marginTop: 8 }}>
+                  <Slider
+                    value={config.difficulty_level}
+                    onChange={(value) => updateConfig({ difficulty_level: value })}
+                    min={1}
+                    max={5}
+                    marks={{
+                      1: '1',
+                      2: '2',
+                      3: '3',
+                      4: '4',
+                      5: '5'
+                    }}
+                    tooltip={{
+                      formatter: (value) => getDifficultyLabel(value || 3)
+                    }}
+                  />
+                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                    当前：{getDifficultyLabel(config.difficulty_level)}
+                  </Text>
+                </div>
+              </div>
+            </Col>
+            
+            <Col xs={24} sm={12}>
+              <div className="setting-item">
+                <Text strong>播放速度</Text>
+                <div style={{ marginTop: 8 }}>
+                  <Slider
+                    value={config.playback_speed}
+                    onChange={(value) => updateConfig({ playback_speed: value })}
+                    min={0.5}
+                    max={2.0}
+                    step={0.25}
+                    marks={{
+                      0.5: '0.5x',
+                      1.0: '1.0x',
+                      1.5: '1.5x',
+                      2.0: '2.0x'
+                    }}
+                    tooltip={{
+                      formatter: (value) => `${value}x ${getSpeedLabel(value || 1.0)}`
+                    }}
+                  />
+                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                    当前：{config.playback_speed}x {getSpeedLabel(config.playback_speed)}
+                  </Text>
+                </div>
+              </div>
+            </Col>
+            
+            <Col xs={24} sm={12}>
+              <div className="setting-item">
+                <Text strong>其他选项</Text>
+                <div style={{ marginTop: 8 }}>
+                  <Space direction="vertical">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={config.show_chinese}
+                        onChange={(e) => updateConfig({ show_chinese: e.target.checked })}
+                      />
+                      <span>显示中文翻译</span>
+                    </label>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={config.auto_play}
+                        onChange={(e) => updateConfig({ auto_play: e.target.checked })}
+                      />
+                      <span>自动播放音频</span>
+                    </label>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={config.auto_play_new_sentence}
+                        onChange={(e) => updateConfig({ auto_play_new_sentence: e.target.checked })}
+                      />
+                      <span>切换新句子时自动播放</span>
+                    </label>
+                  </Space>
+                </div>
+              </div>
+            </Col>
+          </Row>
+        </Card>
+
+        {/* 开始按钮瓦片 */}
+        <Card className="tile-card">
+          <div className="start-practice-section">
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlayCircleOutlined />}
+              onClick={handleStartPractice}
+              className="start-button"
+              block
+            >
+              开始听写练习
+            </Button>
+            
+            <div className="config-summary">
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                {config.practice_type === 'word' ? '单词练习' : '句子练习'}：
+                {config.practice_type === 'word' ? selectedLibrary?.name : 
+                  config.categories && config.categories.length > 0 ? 
+                    `${config.categories.length}个分类` : '所有分类'
+                } • {config.sentence_count}个
+                {config.practice_type === 'word' ? '单词' : '句子'} • 
+                {modeOptions.find(m => m.value === config.mode)?.label} • 
+                难度{config.difficulty_level}级
+              </Text>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

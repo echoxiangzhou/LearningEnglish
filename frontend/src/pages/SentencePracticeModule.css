@@ -1,0 +1,227 @@
+.sentence-practice-module {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.module-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.module-header .ant-typography {
+  margin-bottom: 12px;
+}
+
+.tips-card {
+  background: linear-gradient(135deg, #e6f7ff, #f0f9ff);
+  border: 1px solid #91d5ff;
+  border-radius: 12px;
+  margin-top: 20px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tips-list {
+  margin: 8px 0 0 20px;
+  padding: 0;
+  color: #595959;
+}
+
+.tips-list li {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.practice-tabs {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.practice-tabs .ant-tabs-tab {
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 24px;
+}
+
+.practice-tabs .ant-tabs-tab-active {
+  background: linear-gradient(135deg, #1890ff, #096dd9);
+  color: white;
+  border-radius: 8px;
+}
+
+.practice-tabs .ant-tabs-content-holder {
+  padding-top: 20px;
+}
+
+.results-container {
+  text-align: center;
+  padding: 20px;
+}
+
+.errors-card {
+  margin-top: 30px;
+  text-align: left;
+}
+
+.error-item {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 8px;
+}
+
+.error-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.error-details .expected,
+.error-details .actual {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sentence-text {
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
+  line-height: 1.6;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: block;
+  margin-top: 4px;
+}
+
+.error-text {
+  color: #f5222d;
+  background: rgba(245, 34, 45, 0.1);
+}
+
+.word-errors {
+  background: #f9f9f9;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #faad14;
+}
+
+.word-errors ul {
+  margin: 8px 0 0 16px;
+  padding: 0;
+}
+
+.word-errors li {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #595959;
+}
+
+/* List styling */
+.errors-card .ant-list-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.errors-card .ant-list-item:last-child {
+  border-bottom: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .sentence-practice-module {
+    padding: 10px;
+  }
+  
+  .practice-tabs {
+    padding: 15px;
+  }
+  
+  .practice-tabs .ant-tabs-tab {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+  
+  .tips-card {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+  
+  .sentence-text {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+  
+  .error-details {
+    gap: 10px;
+  }
+  
+  .word-errors {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .module-header {
+    text-align: left;
+  }
+  
+  .tips-card {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .error-details .expected,
+  .error-details .actual {
+    gap: 6px;
+  }
+  
+  .word-errors ul {
+    margin-left: 12px;
+  }
+}
+
+/* Tab content animations */
+.ant-tabs-content {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Code highlighting in error display */
+.ant-typography-code {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  border-radius: 3px;
+  padding: 2px 4px;
+}
+
+.ant-typography-code.ant-typography-code-danger {
+  color: #f5222d;
+  background: rgba(245, 34, 45, 0.15);
+  border-color: rgba(245, 34, 45, 0.3);
+}
+
+/* Copy button styling */
+.ant-typography-copy {
+  color: #1890ff;
+  margin-left: 8px;
+  vertical-align: top;
+}
+
+.ant-typography-copy:hover {
+  background-color: rgba(24, 144, 255, 0.1);
+  border-radius: 4px;
+}

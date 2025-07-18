@@ -1,0 +1,242 @@
+.dashboard {
+  padding: 24px;
+  background: #f5f5f5;
+  min-height: calc(100vh - 64px);
+}
+
+.dashboard-header {
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.welcome-text h2 {
+  margin: 0 0 8px 0;
+  color: #1f2937;
+}
+
+.stats-row,
+.modules-row,
+.achievements-row,
+.quick-actions-row {
+  margin-bottom: 24px;
+}
+
+.module-card {
+  height: 100%;
+  transition: all 0.3s;
+}
+
+.module-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.module-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.module-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.module-info {
+  flex: 1;
+}
+
+.module-info h4 {
+  margin: 0 0 4px 0;
+  color: #1f2937;
+}
+
+.module-progress {
+  margin-bottom: 16px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.module-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.achievement-item {
+  text-align: center;
+  padding: 16px;
+  border-radius: 8px;
+  transition: all 0.3s;
+  border: 2px solid #f0f0f0;
+}
+
+.achievement-item.earned {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  border-color: #ffd700;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.achievement-item:not(.earned) {
+  opacity: 0.5;
+  filter: grayscale(100%);
+}
+
+.achievement-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.achievement-title {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.goal-item {
+  margin-bottom: 16px;
+}
+
+.goal-item:last-child {
+  margin-bottom: 0;
+}
+
+.goal-item .ant-typography {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.recommendation-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.recommendation-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.recommendation-item .ant-typography:first-child {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.recommendation-item .ant-typography:nth-child(2) {
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 16px;
+  }
+  
+  .dashboard-header {
+    padding: 20px;
+  }
+  
+  .welcome-section {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+  
+  .module-header {
+    align-items: center;
+  }
+  
+  .achievement-item {
+    padding: 12px;
+  }
+  
+  .achievement-icon {
+    font-size: 24px;
+  }
+}
+
+/* Accessibility improvements */
+.module-card:focus {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+.achievement-item:focus {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* Animation for progress bars */
+.ant-progress-line .ant-progress-inner {
+  transition: all 0.3s ease;
+}
+
+/* Card hover effects */
+.dashboard .ant-card {
+  transition: all 0.3s;
+}
+
+.dashboard .ant-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Statistics cards styling */
+.stats-row .ant-card {
+  text-align: center;
+}
+
+.stats-row .ant-statistic {
+  padding: 8px 0;
+}
+
+.stats-row .ant-statistic-content-value {
+  font-weight: 600;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .dashboard {
+    background: #141414;
+  }
+  
+  .dashboard-header {
+    background: #1f1f1f;
+    color: white;
+  }
+  
+  .welcome-text h2 {
+    color: white;
+  }
+  
+  .module-card {
+    background: #1f1f1f;
+    color: white;
+  }
+  
+  .module-info h4 {
+    color: white;
+  }
+}

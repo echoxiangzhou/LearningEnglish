@@ -1,0 +1,59 @@
+.responsive-test {
+  padding: var(--spacing-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.test-card {
+  height: 100%;
+  transition: box-shadow 0.3s ease;
+}
+
+.test-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.grid-item {
+  background: #1890ff;
+  color: white;
+  padding: var(--spacing-sm);
+  text-align: center;
+  border-radius: 4px;
+  font-size: 12px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive test styles */
+@media (max-width: 767px) {
+  .responsive-test {
+    padding: var(--spacing-md);
+  }
+  
+  .grid-item {
+    font-size: 10px;
+    min-height: 32px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .grid-item {
+    font-size: 11px;
+    min-height: 36px;
+  }
+}
+
+/* Text size demonstrations */
+.responsive-test .text-xs,
+.responsive-test .text-sm,
+.responsive-test .text-base,
+.responsive-test .text-lg,
+.responsive-test .text-xl,
+.responsive-test .text-xxl {
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-left: 3px solid #1890ff;
+  background: rgba(24, 144, 255, 0.05);
+}

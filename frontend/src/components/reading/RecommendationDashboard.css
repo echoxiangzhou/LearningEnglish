@@ -1,0 +1,293 @@
+/* RecommendationDashboard.css */
+
+.recommendation-dashboard {
+  @apply max-w-7xl mx-auto p-6;
+}
+
+.dashboard-header {
+  @apply mb-8;
+}
+
+.recommendations-content {
+  @apply space-y-6;
+}
+
+.recommendation-card {
+  @apply border border-gray-200 rounded-lg transition-all duration-200 hover:border-gray-300;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.recommendation-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.user-profile-card {
+  @apply border border-blue-200 bg-blue-50/30;
+}
+
+.stats-card {
+  @apply border border-green-200 bg-green-50/30;
+}
+
+/* Tab content animations */
+.tabs-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Badge customizations */
+.difficulty-badge {
+  @apply px-2 py-1 text-xs font-medium rounded-full text-white;
+}
+
+.difficulty-very-easy {
+  @apply bg-green-500;
+}
+
+.difficulty-easy {
+  @apply bg-lime-500;
+}
+
+.difficulty-medium {
+  @apply bg-yellow-500;
+}
+
+.difficulty-hard {
+  @apply bg-orange-500;
+}
+
+.difficulty-very-hard {
+  @apply bg-red-500;
+}
+
+/* Card grid responsive adjustments */
+@media (max-width: 768px) {
+  .recommendation-dashboard {
+    @apply p-4;
+  }
+  
+  .dashboard-header h1 {
+    @apply text-2xl;
+  }
+  
+  .grid.grid-cols-1.lg\\:grid-cols-2 {
+    @apply grid-cols-1;
+  }
+}
+
+/* Loading and error states */
+.loading-state {
+  @apply flex items-center justify-center h-64 text-gray-500;
+}
+
+.error-state {
+  @apply text-center p-8 text-red-600;
+}
+
+/* Custom scrollbar for tabs */
+.tabs-list {
+  @apply overflow-x-auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.tabs-list::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabs-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tabs-list::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 2px;
+}
+
+.tabs-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
+/* Performance indicator styles */
+.performance-trend-up {
+  @apply text-green-600;
+}
+
+.performance-trend-down {
+  @apply text-red-600;
+}
+
+.performance-trend-stable {
+  @apply text-gray-600;
+}
+
+/* Recommendation type indicators */
+.recommendation-type-challenge {
+  @apply border-l-4 border-red-400;
+}
+
+.recommendation-type-comfort {
+  @apply border-l-4 border-blue-400;
+}
+
+.recommendation-type-explore {
+  @apply border-l-4 border-purple-400;
+}
+
+.recommendation-type-trending {
+  @apply border-l-4 border-orange-400;
+}
+
+/* Tag overflow handling */
+.tags-container {
+  @apply flex flex-wrap gap-1 max-h-12 overflow-hidden;
+}
+
+/* Hover effects for interactive elements */
+.article-card-button:hover {
+  @apply bg-blue-600 transform scale-105;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Stats card number styling */
+.stats-number {
+  @apply text-2xl font-bold;
+}
+
+.stats-label {
+  @apply text-sm text-gray-600 mt-1;
+}
+
+/* User profile metrics */
+.profile-metric {
+  @apply flex justify-between items-center py-1;
+}
+
+.profile-metric-label {
+  @apply text-sm text-gray-600;
+}
+
+.profile-metric-value {
+  @apply font-medium text-gray-900;
+}
+
+/* Empty state styling */
+.empty-state {
+  @apply text-center py-12 text-gray-500;
+}
+
+.empty-state-icon {
+  @apply w-16 h-16 mx-auto mb-4 text-gray-300;
+}
+
+.empty-state-title {
+  @apply text-lg font-medium text-gray-900 mb-2;
+}
+
+.empty-state-description {
+  @apply text-sm text-gray-600;
+}
+
+/* Responsive grid adjustments */
+@media (min-width: 1024px) {
+  .recommendation-grid {
+    @apply grid-cols-3;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .recommendation-grid {
+    @apply grid-cols-2;
+  }
+}
+
+@media (max-width: 767px) {
+  .recommendation-grid {
+    @apply grid-cols-1;
+  }
+  
+  .tabs-list {
+    @apply text-sm;
+  }
+  
+  .tabs-tab {
+    @apply px-3 py-2;
+  }
+}
+
+/* Print styles */
+@media print {
+  .recommendation-dashboard {
+    @apply text-black bg-white;
+  }
+  
+  .recommendation-card {
+    @apply border border-gray-300 shadow-none;
+    break-inside: avoid;
+  }
+  
+  .tabs-list {
+    @apply hidden;
+  }
+}
+
+/* Dark mode support (if implemented) */
+@media (prefers-color-scheme: dark) {
+  .recommendation-dashboard {
+    @apply text-white;
+  }
+  
+  .recommendation-card {
+    @apply bg-gray-800 border-gray-700;
+  }
+  
+  .user-profile-card {
+    @apply bg-blue-900/30 border-blue-700;
+  }
+  
+  .stats-card {
+    @apply bg-green-900/30 border-green-700;
+  }
+}
+
+/* Focus states for accessibility */
+.recommendation-card:focus-within {
+  @apply ring-2 ring-blue-500 ring-offset-2;
+}
+
+.tabs-tab:focus {
+  @apply ring-2 ring-blue-500 ring-offset-2 rounded;
+}
+
+/* Animation for recommendation score */
+.recommendation-score {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Loading skeleton styles */
+.skeleton {
+  @apply animate-pulse bg-gray-200 rounded;
+}
+
+.skeleton-text {
+  @apply h-4 bg-gray-200 rounded;
+}
+
+.skeleton-title {
+  @apply h-6 bg-gray-200 rounded;
+}
+
+.skeleton-button {
+  @apply h-8 w-24 bg-gray-200 rounded;
+}

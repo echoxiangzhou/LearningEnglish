@@ -19,10 +19,18 @@ from app.models.dictation_practice import (
     DictationSession, DictationWordAttempt, DictationProgress,
     DictationSettings, DictationDifficulty, HintType
 )
-from app.models.vocabulary import (
-    VocabularyCategory, UserVocabulary, VocabularyTestResult, 
-    VocabularySession, VocabularyAchievement, word_categories,
-    MasteryLevel, TestType
+from app.models.vocabulary_library import (
+    VocabularyLibrary, LibraryAssignment, LibraryType, GradeLevel,
+    library_words
+)
+from app.models.analytics import (
+    UserProgress, LearningStats, UserAchievements, ErrorAnalysis,
+    LearningRecommendations, AnalyticsCache, ModuleType, ActivityType,
+    CompletionStatus, AchievementType, ErrorCategory, RecommendationType
+)
+from app.models.user_category import UserCategoryAssignment
+from app.models.word_error import (
+    WordError, ErrorPattern, ErrorReview, ErrorType
 )
 
 __all__ = [
@@ -35,7 +43,11 @@ __all__ = [
     'GeneratedSentence', 'SentenceGenerationPattern', 'WordAnalysis',
     'DictationSession', 'DictationWordAttempt', 'DictationProgress',
     'DictationSettings', 'DictationDifficulty', 'HintType',
-    'VocabularyCategory', 'UserVocabulary', 'VocabularyTestResult',
-    'VocabularySession', 'VocabularyAchievement', 'word_categories',
-    'MasteryLevel', 'TestType'
+    'VocabularyLibrary', 'LibraryAssignment', 'LibraryType', 'GradeLevel',
+    'library_words',
+    'UserProgress', 'LearningStats', 'UserAchievements', 'ErrorAnalysis',
+    'LearningRecommendations', 'AnalyticsCache', 'ModuleType', 'ActivityType',
+    'CompletionStatus', 'AchievementType', 'ErrorCategory', 'RecommendationType',
+    'UserCategoryAssignment',
+    'WordError', 'ErrorPattern', 'ErrorReview', 'ErrorType'
 ]

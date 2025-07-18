@@ -1,0 +1,40 @@
+.admin-container {
+  padding: 24px;
+  background: #f5f5f5;
+  min-height: calc(100vh - 64px);
+}
+
+.admin-header {
+  margin-bottom: 24px;
+}
+
+.admin-tabs {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.admin-tabs .ant-tabs-tab {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* Statistics styling */
+.admin-header .ant-statistic {
+  text-align: center;
+}
+
+.admin-header .ant-statistic-content-value {
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 16px;
+  }
+  
+  .admin-tabs {
+    padding: 16px;
+  }
+}
