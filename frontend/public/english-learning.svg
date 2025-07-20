@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Book background -->
+  <rect x="8" y="8" width="48" height="48" rx="4" fill="#4F46E5" />
+  
+  <!-- Book pages -->
+  <rect x="12" y="12" width="40" height="40" rx="2" fill="#E0E7FF" />
+  
+  <!-- Letter A (representing alphabet/English) -->
+  <path d="M24 36 L28 24 L32 24 L36 36 M26 32 L34 32" stroke="#4F46E5" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Small accent lines representing text -->
+  <line x1="40" y1="28" x2="46" y2="28" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+  <line x1="40" y1="32" x2="44" y2="32" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+  <line x1="40" y1="36" x2="46" y2="36" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+</svg>

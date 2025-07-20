@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { Card, Form, Input, Button, Avatar, Upload, message, Tabs, Statistic, Row, Col } from 'antd';
 import { UserOutlined, UploadOutlined, EditOutlined, SaveOutlined } from '@ant-design/icons';
 import { useAppSelector } from '../store/hooks';
+import { authService, ChangePasswordRequest } from '../services/authService';
 import './Profile.css';
 
 const { TabPane } = Tabs;
 
 const Profile: React.FC = () => {
   const [form] = Form.useForm();
+  const [passwordForm] = Form.useForm();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const { user } = useAppSelector(state => state.auth);
   
   const isAdmin = user?.role === 'admin' || user?.role === 'teacher';
@@ -33,6 +36,25 @@ const Profile: React.FC = () => {
       message.success('头像上传成功');
     } else if (info.file.status === 'error') {
       message.error('头像上传失败');
+    }
+  };
+
+  const handlePasswordChange = async (values: any) => {
+    setIsPasswordLoading(true);
+    try {
+      const passwordData: ChangePasswordRequest = {
+        current_password: values.currentPassword,
+        new_password: values.newPassword
+      };
+      
+      await authService.changePassword(passwordData);
+      message.success('密码更新成功');
+      passwordForm.resetFields();
+    } catch (error: any) {
+      console.error('Password change error:', error);
+      message.error(error.message || '密码更新失败，请重试');
+    } finally {
+      setIsPasswordLoading(false);
     }
   };
 
@@ -206,7 +228,7 @@ const Profile: React.FC = () => {
 
         <TabPane tab="安全设置" key="security">
           <Card title="密码设置">
-            <Form layout="vertical">
+            <Form form={passwordForm} layout="vertical" onFinish={handlePasswordChange}>
               <Form.Item
                 label="当前密码"
                 name="currentPassword"
@@ -243,7 +265,14 @@ const Profile: React.FC = () => {
                 <Input.Password placeholder="请再次输入新密码" />
               </Form.Item>
               <Form.Item>
-                <Button type="primary">更新密码</Button>
+                <Button 
+                  type="primary" 
+                  htmlType="submit" 
+                  loading={isPasswordLoading}
+                  disabled={isPasswordLoading}
+                >
+                  更新密码
+                </Button>
               </Form.Item>
             </Form>
           </Card>

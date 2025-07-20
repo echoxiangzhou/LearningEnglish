@@ -3,10 +3,10 @@ from flask_jwt_extended import (
     create_access_token, create_refresh_token, jwt_required, 
     get_jwt_identity, get_jwt
 )
-from flask_mail import Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 from app.models import User, SystemLog, AuditLog
+from app.services.email_service import send_verification_email
 import re
 import secrets
 import string
@@ -134,21 +134,35 @@ def register():
             request=request
         )
         
-        # Generate email verification code
-        verification_code = str(secrets.randbelow(1000000)).zfill(6)  # 6-digit code
-        user.email_verification_code = verification_code
-        user.email_verification_expires = datetime.utcnow() + timedelta(minutes=10)
-        db.session.commit()
+        # Send email verification if email was provided
+        if email:
+            verification_code = str(secrets.randbelow(1000000)).zfill(6)  # 6-digit code
+            user.email_verification_code = verification_code
+            user.email_verification_expires = datetime.utcnow() + timedelta(minutes=10)
+            db.session.commit()
+            
+            # Send verification email
+            email_sent = send_verification_email(email, verification_code, username)
+            if email_sent:
+                SystemLog.log('INFO', 'auth', f'Verification email sent to {email}', 
+                             details={'user_id': user.id}, request=request)
+            else:
+                SystemLog.log('WARNING', 'auth', f'Failed to send verification email to {email}', 
+                             details={'user_id': user.id, 'code': verification_code}, request=request)
         
-        # TODO: Send email with verification code
-        # For now, log the verification code for testing
-        SystemLog.log('INFO', 'auth', f'Email verification code for {email}: {verification_code}', 
-                     details={'user_id': user.id, 'code': verification_code}, request=request)
-        
-        return jsonify({
-            'message': 'Registration successful. Please check your email for verification code.',
-            'email': email
-        }), 201
+        # Return appropriate message based on registration method
+        if email:
+            return jsonify({
+                'message': 'Registration successful. Please check your email for verification code.',
+                'email': email,
+                'requires_verification': True
+            }), 201
+        else:
+            return jsonify({
+                'message': 'Registration successful.',
+                'phone': phone,
+                'requires_verification': False
+            }), 201
         
     except Exception as e:
         db.session.rollback()
@@ -510,10 +524,14 @@ def resend_verification():
         user.email_verification_expires = datetime.utcnow() + timedelta(minutes=10)
         db.session.commit()
         
-        # TODO: Send email with verification code
-        # For now, log the verification code for testing
-        SystemLog.log('INFO', 'auth', f'New verification code for {email}: {verification_code}', 
-                     details={'user_id': user.id, 'code': verification_code}, request=request)
+        # Send verification email
+        email_sent = send_verification_email(email, verification_code, user.username)
+        if email_sent:
+            SystemLog.log('INFO', 'auth', f'Verification email resent to {email}', 
+                         details={'user_id': user.id}, request=request)
+        else:
+            SystemLog.log('WARNING', 'auth', f'Failed to resend verification email to {email}', 
+                         details={'user_id': user.id, 'code': verification_code}, request=request)
         
         return jsonify({'message': 'Verification code sent successfully'}), 200
         

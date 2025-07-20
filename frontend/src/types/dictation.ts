@@ -121,6 +121,9 @@ export interface WordLibrary {
   categories: string[];
 }
 
+// DEPRECATED: 静态词库已被废弃，现在从后端动态加载
+// 使用 vocabularyLibraryAdapter.getVocabularyLibraries() 替代
+// 这个常量仅作为后备选项保留
 export const WORD_LIBRARIES: WordLibrary[] = [
   // 小学阶段词库
   {

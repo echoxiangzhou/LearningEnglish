@@ -1,0 +1,18 @@
+# SSH配置文件
+# 使用方法: 
+# 1. 复制此内容到 ~/.ssh/config
+# 2. 然后可以直接使用: ssh learning-server
+
+Host learning-server
+    HostName 191.101.232.50
+    User root
+    Port 22
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    # 如果要使用密码认证，取消下面一行的注释
+    # PasswordAuthentication yes
+
+# 使用示例:
+# ssh learning-server
+# scp file.txt learning-server:/root/
+# ssh learning-server "docker ps"

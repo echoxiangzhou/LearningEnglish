@@ -1,0 +1,126 @@
+.library-assignment-manager {
+  padding: 0;
+}
+
+.library-assignment-manager .header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.library-assignment-manager .title-section {
+  display: flex;
+  align-items: center;
+}
+
+.library-assignment-manager .filters-section {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.library-assignment-manager .summary-section {
+  padding: 16px 0;
+}
+
+.library-assignment-manager .top-libraries {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.library-assignment-manager .library-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.library-assignment-manager .library-info {
+  margin-left: 16px;
+}
+
+.library-assignment-manager .library-name {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+/* Table styling */
+.library-assignment-manager .ant-table-tbody > tr > td {
+  vertical-align: top;
+  padding: 12px 16px;
+}
+
+.library-assignment-manager .ant-table-thead > tr > th {
+  background: #f5f5f5;
+  font-weight: 600;
+}
+
+/* Filter section responsive */
+@media (max-width: 768px) {
+  .library-assignment-manager .header-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .library-assignment-manager .title-section {
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+}
+
+/* Statistics cards */
+.library-assignment-manager .ant-statistic {
+  text-align: center;
+}
+
+.library-assignment-manager .ant-statistic-title {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.library-assignment-manager .ant-statistic-content {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* Badge styling for top libraries */
+.library-assignment-manager .ant-badge {
+  width: 100%;
+}
+
+.library-assignment-manager .ant-badge-count {
+  position: relative;
+  transform: none;
+  top: auto;
+  right: auto;
+  margin-right: 8px;
+}
+
+/* Tab content spacing */
+.library-assignment-manager .ant-tabs-content-holder {
+  padding-top: 16px;
+}
+
+/* Loading and empty states */
+.library-assignment-manager .ant-spin-nested-loading {
+  min-height: 200px;
+}
+
+.library-assignment-manager .ant-empty {
+  margin: 32px 0;
+}
+
+/* Action buttons spacing */
+.library-assignment-manager .ant-space {
+  gap: 8px !important;
+}
+
+/* Tooltip styling */
+.library-assignment-manager .ant-tooltip {
+  font-size: 12px;
+}

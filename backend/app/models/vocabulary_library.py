@@ -101,6 +101,14 @@ class VocabularyLibrary(db.Model):
         import json
         self.tags = json.dumps(tags_list) if tags_list else None
     
+    @property
+    def word_count(self):
+        """Get word count using the association table"""
+        from sqlalchemy import func
+        return db.session.query(func.count(library_words.c.word_id)).filter(
+            library_words.c.library_id == self.id
+        ).scalar() or 0
+    
     def update_word_count(self):
         """Update the word count based on associated words"""
         from sqlalchemy import func
@@ -227,6 +235,8 @@ class LibraryAssignment(db.Model):
             'words_completed': self.words_completed,
             'completion_percentage': self.calculate_completion_percentage(),
             'last_accessed': self.last_accessed.isoformat() if self.last_accessed else None,
-            'assigned_at': self.assigned_at.isoformat(),
+            'created_at': self.assigned_at.isoformat(),
+            'updated_at': self.assigned_at.isoformat(),
+            'assigned_by': self.assigned_by,
             'library': self.library.to_dict() if self.library else None
         }

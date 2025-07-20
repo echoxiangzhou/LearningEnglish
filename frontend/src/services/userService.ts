@@ -222,6 +222,32 @@ class UserService {
   }
 
   /**
+   * Reset user password (admin only)
+   */
+  async resetUserPassword(id: number, newPassword: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/${id}/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+        body: JSON.stringify({ new_password: newPassword }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to reset password');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get users assigned to a specific category
    */
   async getUsersAssignedToCategory(categoryId: number): Promise<User[]> {

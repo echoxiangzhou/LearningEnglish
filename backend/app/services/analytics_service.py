@@ -13,10 +13,15 @@ import json
 import calendar
 
 from app import db
-# Vocabulary models removed - analytics now focuses on dictation and reading
-from app.models.word import Word
 from app.models.user import User
 from app.models.dictation_practice import DictationSession, DictationWordAttempt
+from app.models.analytics import (
+    UserProgress, LearningStats, UserAchievements, ErrorAnalysis,
+    LearningRecommendations, AnalyticsCache, ModuleType, ActivityType,
+    CompletionStatus, AchievementType, ErrorCategory, RecommendationType
+)
+from app.models.learning_session import LearningSession, Progress, UserWordProgress
+from app.models.article import ReadingSession, QuestionAttempt
 
 
 class AnalyticsService:
@@ -26,17 +31,20 @@ class AnalyticsService:
     def get_progress_dashboard(user_id: int) -> Dict[str, Any]:
         """Get comprehensive progress dashboard data"""
         
-        # Basic vocabulary statistics
-        vocab_stats = AnalyticsService._get_vocabulary_overview(user_id)
+        # Check cache first
+        cache_key = f"dashboard_{user_id}"
+        cached_data = AnalyticsCache.get_cached_data(cache_key)
+        if cached_data:
+            return cached_data
+        
+        # Basic learning statistics
+        learning_stats = AnalyticsService._get_learning_overview(user_id)
         
         # Learning progress over time
         progress_timeline = AnalyticsService._get_progress_timeline(user_id)
         
-        # Mastery distribution
-        mastery_distribution = AnalyticsService._get_mastery_distribution(user_id)
-        
-        # Category performance
-        category_performance = AnalyticsService._get_category_performance(user_id)
+        # Module performance distribution
+        module_performance = AnalyticsService._get_module_performance(user_id)
         
         # Recent activity
         recent_activity = AnalyticsService._get_recent_activity(user_id)
@@ -50,70 +58,82 @@ class AnalyticsService:
         # Performance trends
         performance_trends = AnalyticsService._get_performance_trends(user_id)
         
-        return {
-            'overview': vocab_stats,
+        dashboard_data = {
+            'overview': learning_stats,
             'progress_timeline': progress_timeline,
-            'mastery_distribution': mastery_distribution,
-            'category_performance': category_performance,
+            'module_performance': module_performance,
             'recent_activity': recent_activity,
             'achievements': achievements,
             'streak_data': streak_data,
             'performance_trends': performance_trends,
             'generated_at': datetime.utcnow().isoformat()
         }
+        
+        # Cache the result for 15 minutes
+        AnalyticsCache.set_cached_data(cache_key, dashboard_data, user_id, 'dashboard', 15)
+        
+        return dashboard_data
     
     @staticmethod
-    def _get_vocabulary_overview(user_id: int) -> Dict[str, Any]:
-        """Get basic vocabulary statistics overview"""
-        total_words = UserVocabulary.query.filter(UserVocabulary.user_id == user_id).count()
+    def _get_learning_overview(user_id: int) -> Dict[str, Any]:
+        """Get basic learning statistics overview"""
+        # Get or create learning stats
+        learning_stats = LearningStats.query.filter(LearningStats.user_id == user_id).first()
+        if not learning_stats:
+            learning_stats = LearningStats(user_id=user_id)
+            db.session.add(learning_stats)
+            db.session.commit()
         
-        # Words by mastery level
-        mastery_counts = (db.session.query(
-            UserVocabulary.mastery_level,
-            func.count(UserVocabulary.id)
-        ).filter(UserVocabulary.user_id == user_id)
-         .group_by(UserVocabulary.mastery_level)
-         .all())
+        # Calculate today's stats
+        today = datetime.utcnow().date()
+        today_sessions = UserProgress.query.filter(
+            UserProgress.user_id == user_id,
+            func.date(UserProgress.session_start) == today,
+            UserProgress.completion_status == CompletionStatus.COMPLETED
+        ).all()
         
-        mastery_stats = {level.value: 0 for level in MasteryLevel}
-        for level, count in mastery_counts:
-            mastery_stats[level.value] = count
+        today_time = sum(session.time_spent for session in today_sessions) // 60  # Convert to minutes
+        today_items = sum(session.items_attempted for session in today_sessions)
+        today_accuracy = 0
+        if today_sessions:
+            total_correct = sum(session.items_correct for session in today_sessions)
+            total_attempted = sum(session.items_attempted for session in today_sessions)
+            if total_attempted > 0:
+                today_accuracy = (total_correct / total_attempted) * 100
         
-        # Due for review
-        due_count = (UserVocabulary.query
-                    .filter(UserVocabulary.user_id == user_id)
-                    .filter(or_(
-                        UserVocabulary.due_for_review == True,
-                        UserVocabulary.next_review <= datetime.utcnow()
-                    )).count())
-        
-        # Average success rate
-        avg_success_rate = (db.session.query(func.avg(UserVocabulary.success_rate))
-                           .filter(UserVocabulary.user_id == user_id)
-                           .filter(UserVocabulary.review_count > 0)
-                           .scalar() or 0.0)
-        
-        # Total test attempts
-        total_tests = VocabularyTestResult.query.filter(
-            VocabularyTestResult.user_id == user_id
+        # Words learned progress (from word progress)
+        words_learned = UserWordProgress.query.filter(
+            UserWordProgress.user_id == user_id,
+            UserWordProgress.mastery_level >= 3  # Assuming level 3+ is "learned"
         ).count()
         
-        # Recent accuracy (last 7 days)
-        recent_cutoff = datetime.utcnow() - timedelta(days=7)
-        recent_accuracy = (db.session.query(func.avg(func.cast(VocabularyTestResult.is_correct, db.Float)))
-                          .filter(VocabularyTestResult.user_id == user_id)
-                          .filter(VocabularyTestResult.created_at >= recent_cutoff)
-                          .scalar() or 0.0)
-        
         return {
-            'total_words': total_words,
-            'mastery_distribution': mastery_stats,
-            'due_for_review': due_count,
-            'average_success_rate': round(avg_success_rate * 100, 1),
-            'recent_accuracy': round(recent_accuracy * 100, 1),
-            'total_tests': total_tests,
-            'mastered_words': mastery_stats.get('mastered', 0),
-            'learning_words': mastery_stats.get('learning', 0) + mastery_stats.get('familiar', 0)
+            'total_sessions': learning_stats.total_sessions,
+            'total_time_spent': learning_stats.total_time_spent // 60,  # Convert to minutes
+            'total_items_practiced': learning_stats.total_items_practiced,
+            'average_accuracy': round(learning_stats.average_accuracy, 1),
+            'current_streak': learning_stats.current_streak,
+            'longest_streak': learning_stats.longest_streak,
+            'words_learned': words_learned,
+            'today_stats': {
+                'study_time': today_time,
+                'items_practiced': today_items,
+                'accuracy': round(today_accuracy, 1)
+            },
+            'module_stats': {
+                'dictation': {
+                    'sessions': learning_stats.dictation_sessions,
+                    'accuracy': round(learning_stats.dictation_accuracy, 1)
+                },
+                'vocabulary': {
+                    'sessions': learning_stats.vocabulary_sessions,
+                    'accuracy': round(learning_stats.vocabulary_accuracy, 1)
+                },
+                'reading': {
+                    'sessions': learning_stats.reading_sessions,
+                    'accuracy': round(learning_stats.reading_accuracy, 1)
+                }
+            }
         }
     
     @staticmethod
@@ -121,145 +141,114 @@ class AnalyticsService:
         """Get progress timeline for the last N days"""
         cutoff_date = datetime.utcnow() - timedelta(days=days)
         
-        # Daily test activity
-        daily_tests = (db.session.query(
-            func.date(VocabularyTestResult.created_at).label('test_date'),
-            func.count(VocabularyTestResult.id).label('test_count'),
-            func.avg(func.cast(VocabularyTestResult.is_correct, db.Float)).label('accuracy')
-        ).filter(VocabularyTestResult.user_id == user_id)
-         .filter(VocabularyTestResult.created_at >= cutoff_date)
-         .group_by(func.date(VocabularyTestResult.created_at))
-         .order_by(func.date(VocabularyTestResult.created_at))
-         .all())
-        
-        # Daily new words added
-        daily_new_words = (db.session.query(
-            func.date(UserVocabulary.first_seen).label('date'),
-            func.count(UserVocabulary.id).label('new_words')
-        ).filter(UserVocabulary.user_id == user_id)
-         .filter(UserVocabulary.first_seen >= cutoff_date)
-         .group_by(func.date(UserVocabulary.first_seen))
-         .order_by(func.date(UserVocabulary.first_seen))
+        # Daily learning activity
+        daily_activity = (db.session.query(
+            func.date(UserProgress.session_start).label('activity_date'),
+            func.count(UserProgress.id).label('session_count'),
+            func.sum(UserProgress.items_attempted).label('items_attempted'),
+            func.sum(UserProgress.items_correct).label('items_correct'),
+            func.sum(UserProgress.time_spent).label('total_time')
+        ).filter(UserProgress.user_id == user_id)
+         .filter(UserProgress.session_start >= cutoff_date)
+         .filter(UserProgress.completion_status == CompletionStatus.COMPLETED)
+         .group_by(func.date(UserProgress.session_start))
+         .order_by(func.date(UserProgress.session_start))
          .all())
         
         # Format timeline data
         timeline_data = []
-        test_dict = {str(date): {'count': count, 'accuracy': float(accuracy) if accuracy else 0.0} 
-                    for date, count, accuracy in daily_tests}
-        new_words_dict = {str(date): count for date, count in daily_new_words}
+        activity_dict = {}
+        for date, sessions, attempted, correct, time_spent in daily_activity:
+            accuracy = (correct / max(1, attempted)) * 100 if attempted > 0 else 0
+            activity_dict[str(date)] = {
+                'sessions': sessions,
+                'items_attempted': attempted or 0,
+                'items_correct': correct or 0,
+                'accuracy': accuracy,
+                'time_spent': (time_spent or 0) // 60  # Convert to minutes
+            }
         
         # Generate data for each day
+        total_sessions = 0
+        total_time = 0
+        accuracy_sum = 0
+        accuracy_days = 0
+        
         for i in range(days):
             date = (datetime.utcnow() - timedelta(days=days-1-i)).date()
             date_str = str(date)
             
+            day_data = activity_dict.get(date_str, {
+                'sessions': 0,
+                'items_attempted': 0,
+                'items_correct': 0,
+                'accuracy': 0,
+                'time_spent': 0
+            })
+            
             timeline_data.append({
                 'date': date_str,
-                'test_count': test_dict.get(date_str, {}).get('count', 0),
-                'accuracy': test_dict.get(date_str, {}).get('accuracy', 0.0),
-                'new_words': new_words_dict.get(date_str, 0)
+                'sessions': day_data['sessions'],
+                'items_attempted': day_data['items_attempted'],
+                'items_correct': day_data['items_correct'],
+                'accuracy': round(day_data['accuracy'], 1),
+                'time_spent': day_data['time_spent']
             })
+            
+            total_sessions += day_data['sessions']
+            total_time += day_data['time_spent']
+            if day_data['accuracy'] > 0:
+                accuracy_sum += day_data['accuracy']
+                accuracy_days += 1
         
         return {
             'timeline': timeline_data,
             'period_days': days,
-            'total_tests': sum(item['test_count'] for item in timeline_data),
-            'average_accuracy': sum(item['accuracy'] for item in timeline_data if item['accuracy'] > 0) / 
-                               max(1, len([item for item in timeline_data if item['accuracy'] > 0]))
+            'total_sessions': total_sessions,
+            'total_time': total_time,
+            'average_accuracy': round(accuracy_sum / max(1, accuracy_days), 1)
         }
     
     @staticmethod
-    def _get_mastery_distribution(user_id: int) -> Dict[str, Any]:
-        """Get detailed mastery level distribution with trends"""
-        # Current distribution
-        current_distribution = (db.session.query(
-            UserVocabulary.mastery_level,
-            func.count(UserVocabulary.id)
-        ).filter(UserVocabulary.user_id == user_id)
-         .group_by(UserVocabulary.mastery_level)
-         .all())
-        
-        distribution = {level.value: 0 for level in MasteryLevel}
-        total_words = 0
-        
-        for level, count in current_distribution:
-            distribution[level.value] = count
-            total_words += count
-        
-        # Calculate percentages
-        percentages = {}
-        for level, count in distribution.items():
-            percentages[level] = round((count / max(1, total_words)) * 100, 1)
-        
-        # Weekly progression (words that changed mastery levels)
-        week_ago = datetime.utcnow() - timedelta(days=7)
-        recent_progressions = (db.session.query(
-            UserVocabulary.mastery_level,
-            func.count(UserVocabulary.id)
-        ).filter(UserVocabulary.user_id == user_id)
-         .filter(UserVocabulary.last_updated >= week_ago)
-         .group_by(UserVocabulary.mastery_level)
-         .all())
-        
-        weekly_changes = {level.value: 0 for level in MasteryLevel}
-        for level, count in recent_progressions:
-            weekly_changes[level.value] = count
-        
-        return {
-            'distribution': distribution,
-            'percentages': percentages,
-            'total_words': total_words,
-            'weekly_changes': weekly_changes,
-            'mastery_score': AnalyticsService._calculate_mastery_score(distribution)
-        }
-    
-    @staticmethod
-    def _calculate_mastery_score(distribution: Dict[str, int]) -> float:
-        """Calculate overall mastery score (0-100)"""
-        weights = {
-            'new': 0,
-            'learning': 20,
-            'familiar': 40,
-            'proficient': 70,
-            'mastered': 100
-        }
-        
-        total_score = 0
-        total_words = 0
-        
-        for level, count in distribution.items():
-            total_score += weights.get(level, 0) * count
-            total_words += count
-        
-        return round(total_score / max(1, total_words), 1)
-    
-    @staticmethod
-    def _get_category_performance(user_id: int) -> List[Dict[str, Any]]:
-        """Get performance breakdown by vocabulary categories"""
-        category_stats = (db.session.query(
-            VocabularyCategory.id,
-            VocabularyCategory.name,
-            func.count(UserVocabulary.id).label('total_words'),
-            func.avg(UserVocabulary.success_rate).label('avg_success_rate'),
-            func.count(
-                func.case([(UserVocabulary.mastery_level == MasteryLevel.MASTERED, 1)])
-            ).label('mastered_count')
-        ).join(Word.categories)
-         .join(UserVocabulary, UserVocabulary.word_id == Word.id)
-         .filter(UserVocabulary.user_id == user_id)
-         .group_by(VocabularyCategory.id, VocabularyCategory.name)
-         .order_by(desc('avg_success_rate'))
+    def _get_module_performance(user_id: int) -> List[Dict[str, Any]]:
+        """Get performance breakdown by learning modules"""
+        module_stats = (db.session.query(
+            UserProgress.module_type,
+            func.count(UserProgress.id).label('total_sessions'),
+            func.avg(UserProgress.accuracy_rate).label('avg_accuracy'),
+            func.sum(UserProgress.time_spent).label('total_time'),
+            func.sum(UserProgress.items_attempted).label('total_items'),
+            func.sum(UserProgress.items_correct).label('correct_items')
+        ).filter(UserProgress.user_id == user_id)
+         .filter(UserProgress.completion_status == CompletionStatus.COMPLETED)
+         .group_by(UserProgress.module_type)
          .all())
         
         result = []
-        for category_id, name, total, avg_rate, mastered in category_stats:
+        for module_type, sessions, avg_accuracy, total_time, total_items, correct_items in module_stats:
+            # Calculate recent progress (last 7 days)
+            week_ago = datetime.utcnow() - timedelta(days=7)
+            recent_sessions = UserProgress.query.filter(
+                UserProgress.user_id == user_id,
+                UserProgress.module_type == module_type,
+                UserProgress.session_start >= week_ago,
+                UserProgress.completion_status == CompletionStatus.COMPLETED
+            ).count()
+            
             result.append({
-                'category_id': category_id,
-                'category_name': name,
-                'total_words': total,
-                'mastered_words': mastered,
-                'average_success_rate': round(float(avg_rate or 0) * 100, 1),
-                'mastery_percentage': round((mastered / max(1, total)) * 100, 1)
+                'module_type': module_type.value,
+                'module_name': {
+                    'dictation': '听写练习',
+                    'vocabulary': '词汇学习',
+                    'reading': '阅读理解'
+                }.get(module_type.value, module_type.value),
+                'total_sessions': sessions,
+                'average_accuracy': round(float(avg_accuracy or 0), 1),
+                'total_time_minutes': (total_time or 0) // 60,
+                'total_items': total_items or 0,
+                'correct_items': correct_items or 0,
+                'recent_sessions': recent_sessions,
+                'progress_percentage': min(100, (sessions / max(1, 10)) * 100)  # Assuming 10 sessions as "good progress"
             })
         
         return result
@@ -269,62 +258,61 @@ class AnalyticsService:
         """Get recent learning activity summary"""
         cutoff_date = datetime.utcnow() - timedelta(days=days)
         
-        # Recent tests
-        recent_tests = VocabularyTestResult.query.filter(
-            VocabularyTestResult.user_id == user_id,
-            VocabularyTestResult.created_at >= cutoff_date
-        ).order_by(desc(VocabularyTestResult.created_at)).limit(10).all()
-        
         # Recent sessions
-        recent_sessions = VocabularySession.query.filter(
-            VocabularySession.user_id == user_id,
-            VocabularySession.started_at >= cutoff_date
-        ).order_by(desc(VocabularySession.started_at)).limit(5).all()
+        recent_sessions = UserProgress.query.filter(
+            UserProgress.user_id == user_id,
+            UserProgress.session_start >= cutoff_date
+        ).order_by(desc(UserProgress.session_start)).limit(10).all()
         
-        # Activity by test type
-        test_type_stats = (db.session.query(
-            VocabularyTestResult.test_type,
-            func.count(VocabularyTestResult.id).label('count'),
-            func.avg(func.cast(VocabularyTestResult.is_correct, db.Float)).label('accuracy')
-        ).filter(VocabularyTestResult.user_id == user_id)
-         .filter(VocabularyTestResult.created_at >= cutoff_date)
-         .group_by(VocabularyTestResult.test_type)
+        # Activity by module type
+        module_activity = (db.session.query(
+            UserProgress.module_type,
+            func.count(UserProgress.id).label('count'),
+            func.avg(UserProgress.accuracy_rate).label('accuracy')
+        ).filter(UserProgress.user_id == user_id)
+         .filter(UserProgress.session_start >= cutoff_date)
+         .filter(UserProgress.completion_status == CompletionStatus.COMPLETED)
+         .group_by(UserProgress.module_type)
          .all())
         
-        test_types = []
-        for test_type, count, accuracy in test_type_stats:
-            test_types.append({
-                'test_type': test_type.value,
-                'count': count,
-                'accuracy': round(float(accuracy) * 100, 1)
+        module_breakdown = []
+        for module_type, count, accuracy in module_activity:
+            module_breakdown.append({
+                'module_type': module_type.value,
+                'module_name': {
+                    'dictation': '听写练习',
+                    'vocabulary': '词汇学习', 
+                    'reading': '阅读理解'
+                }.get(module_type.value, module_type.value),
+                'session_count': count,
+                'average_accuracy': round(float(accuracy or 0), 1)
             })
         
         return {
-            'recent_tests': [test.to_dict() for test in recent_tests],
             'recent_sessions': [session.to_dict() for session in recent_sessions],
-            'test_type_breakdown': test_types,
-            'total_recent_tests': len(recent_tests),
-            'total_recent_sessions': len(recent_sessions)
+            'module_breakdown': module_breakdown,
+            'total_recent_sessions': len(recent_sessions),
+            'period_days': days
         }
     
     @staticmethod
     def _get_user_achievements(user_id: int) -> Dict[str, Any]:
         """Get user achievements and progress toward new ones"""
         # Current achievements
-        current_achievements = VocabularyAchievement.query.filter(
-            VocabularyAchievement.user_id == user_id,
-            VocabularyAchievement.is_displayed == True
-        ).order_by(desc(VocabularyAchievement.earned_at)).all()
-        
-        # Calculate potential new achievements
-        potential_achievements = AnalyticsService._calculate_potential_achievements(user_id)
+        current_achievements = UserAchievements.query.filter(
+            UserAchievements.user_id == user_id,
+            UserAchievements.is_displayed == True
+        ).order_by(desc(UserAchievements.unlocked_at)).all()
         
         # Recent achievements (last 30 days)
         recent_cutoff = datetime.utcnow() - timedelta(days=30)
         recent_achievements = [
             ach for ach in current_achievements 
-            if ach.earned_at >= recent_cutoff
+            if ach.unlocked_at >= recent_cutoff
         ]
+        
+        # Calculate potential new achievements
+        potential_achievements = AnalyticsService._calculate_potential_achievements(user_id)
         
         return {
             'current_achievements': [ach.to_dict() for ach in current_achievements],
@@ -339,48 +327,50 @@ class AnalyticsService:
         potential = []
         
         # Get user stats
-        stats = AnalyticsService._get_vocabulary_overview(user_id)
-        streak = AnalyticsService._calculate_learning_streak(user_id)
+        learning_stats = LearningStats.query.filter(LearningStats.user_id == user_id).first()
+        if not learning_stats:
+            return potential
         
         # Streak achievements
+        current_streak = learning_stats.current_streak
         streak_milestones = [7, 14, 30, 60, 100]
         for milestone in streak_milestones:
-            if streak < milestone:
+            if current_streak < milestone:
                 potential.append({
                     'type': 'streak',
-                    'name': f'{milestone} Day Streak',
-                    'description': f'Study vocabulary for {milestone} consecutive days',
-                    'current_progress': streak,
+                    'name': f'{milestone}天连续学习',
+                    'description': f'连续学习{milestone}天',
+                    'current_progress': current_streak,
                     'target': milestone,
-                    'progress_percentage': round((streak / milestone) * 100, 1)
+                    'progress_percentage': round((current_streak / milestone) * 100, 1)
                 })
                 break
         
-        # Mastery achievements
-        mastered_count = stats['mastered_words']
-        mastery_milestones = [10, 25, 50, 100, 250, 500]
-        for milestone in mastery_milestones:
-            if mastered_count < milestone:
+        # Session milestones
+        total_sessions = learning_stats.total_sessions
+        session_milestones = [10, 25, 50, 100, 250]
+        for milestone in session_milestones:
+            if total_sessions < milestone:
                 potential.append({
-                    'type': 'mastery',
-                    'name': f'{milestone} Words Mastered',
-                    'description': f'Reach mastery level on {milestone} words',
-                    'current_progress': mastered_count,
+                    'type': 'volume',
+                    'name': f'完成{milestone}次练习',
+                    'description': f'完成{milestone}次学习练习',
+                    'current_progress': total_sessions,
                     'target': milestone,
-                    'progress_percentage': round((mastered_count / milestone) * 100, 1)
+                    'progress_percentage': round((total_sessions / milestone) * 100, 1)
                 })
                 break
         
         # Accuracy achievements
-        accuracy = stats['average_success_rate']
+        accuracy = learning_stats.average_accuracy
         accuracy_milestones = [80, 90, 95]
         for milestone in accuracy_milestones:
             if accuracy < milestone:
                 potential.append({
                     'type': 'accuracy',
-                    'name': f'{milestone}% Accuracy',
-                    'description': f'Maintain {milestone}% average accuracy',
-                    'current_progress': accuracy,
+                    'name': f'{milestone}%正确率',
+                    'description': f'保持{milestone}%平均正确率',
+                    'current_progress': round(accuracy, 1),
                     'target': milestone,
                     'progress_percentage': round((accuracy / milestone) * 100, 1)
                 })
@@ -391,81 +381,24 @@ class AnalyticsService:
     @staticmethod
     def _get_streak_analytics(user_id: int) -> Dict[str, Any]:
         """Get detailed streak analytics"""
-        current_streak = AnalyticsService._calculate_learning_streak(user_id)
+        learning_stats = LearningStats.query.filter(LearningStats.user_id == user_id).first()
+        if not learning_stats:
+            return {
+                'current_streak': 0,
+                'longest_streak': 0,
+                'streak_history': [],
+                'streak_goal': 7
+            }
         
-        # Longest streak
-        longest_streak = AnalyticsService._calculate_longest_streak(user_id)
-        
-        # Streak history (last 30 days)
+        # Get streak history (last 30 days)
         streak_history = AnalyticsService._get_streak_history(user_id, 30)
         
         return {
-            'current_streak': current_streak,
-            'longest_streak': longest_streak,
+            'current_streak': learning_stats.current_streak,
+            'longest_streak': learning_stats.longest_streak,
             'streak_history': streak_history,
-            'streak_goal': max(7, current_streak + 1)  # Next milestone
+            'streak_goal': max(7, learning_stats.current_streak + 1)
         }
-    
-    @staticmethod
-    def _calculate_learning_streak(user_id: int) -> int:
-        """Calculate current consecutive learning streak"""
-        # Get unique test dates for the last 60 days
-        cutoff_date = datetime.utcnow() - timedelta(days=60)
-        test_dates = (db.session.query(
-            func.date(VocabularyTestResult.created_at).label('test_date')
-        ).filter(VocabularyTestResult.user_id == user_id)
-         .filter(VocabularyTestResult.created_at >= cutoff_date)
-         .distinct()
-         .order_by(func.date(VocabularyTestResult.created_at).desc())
-         .all())
-        
-        if not test_dates:
-            return 0
-        
-        # Calculate consecutive days
-        streak = 0
-        current_date = datetime.utcnow().date()
-        
-        for test_date_tuple in test_dates:
-            test_date = test_date_tuple[0]
-            days_diff = (current_date - test_date).days
-            
-            if days_diff == streak:
-                streak += 1
-            elif days_diff == streak + 1:
-                streak += 1
-            else:
-                break
-        
-        return streak
-    
-    @staticmethod
-    def _calculate_longest_streak(user_id: int) -> int:
-        """Calculate the longest streak ever achieved"""
-        # Get all test dates
-        test_dates = (db.session.query(
-            func.date(VocabularyTestResult.created_at).label('test_date')
-        ).filter(VocabularyTestResult.user_id == user_id)
-         .distinct()
-         .order_by(func.date(VocabularyTestResult.created_at))
-         .all())
-        
-        if not test_dates:
-            return 0
-        
-        dates = [test_date[0] for test_date in test_dates]
-        
-        longest_streak = 0
-        current_streak = 1
-        
-        for i in range(1, len(dates)):
-            if (dates[i] - dates[i-1]).days == 1:
-                current_streak += 1
-            else:
-                longest_streak = max(longest_streak, current_streak)
-                current_streak = 1
-        
-        return max(longest_streak, current_streak)
     
     @staticmethod
     def _get_streak_history(user_id: int, days: int) -> List[Dict[str, Any]]:
@@ -474,11 +407,12 @@ class AnalyticsService:
         
         # Get daily activity
         daily_activity = (db.session.query(
-            func.date(VocabularyTestResult.created_at).label('date'),
-            func.count(VocabularyTestResult.id).label('activity_count')
-        ).filter(VocabularyTestResult.user_id == user_id)
-         .filter(VocabularyTestResult.created_at >= cutoff_date)
-         .group_by(func.date(VocabularyTestResult.created_at))
+            func.date(UserProgress.session_start).label('date'),
+            func.count(UserProgress.id).label('activity_count')
+        ).filter(UserProgress.user_id == user_id)
+         .filter(UserProgress.session_start >= cutoff_date)
+         .filter(UserProgress.completion_status == CompletionStatus.COMPLETED)
+         .group_by(func.date(UserProgress.session_start))
          .all())
         
         activity_dict = {str(date): count for date, count in daily_activity}
@@ -507,40 +441,25 @@ class AnalyticsService:
             month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
             
             month_stats = (db.session.query(
-                func.count(VocabularyTestResult.id).label('total_tests'),
-                func.avg(func.cast(VocabularyTestResult.is_correct, db.Float)).label('accuracy'),
-                func.avg(VocabularyTestResult.response_time).label('avg_response_time')
-            ).filter(VocabularyTestResult.user_id == user_id)
-             .filter(VocabularyTestResult.created_at >= month_start)
-             .filter(VocabularyTestResult.created_at <= month_end)
+                func.count(UserProgress.id).label('total_sessions'),
+                func.avg(UserProgress.accuracy_rate).label('accuracy'),
+                func.sum(UserProgress.time_spent).label('total_time')
+            ).filter(UserProgress.user_id == user_id)
+             .filter(UserProgress.session_start >= month_start)
+             .filter(UserProgress.session_start <= month_end)
+             .filter(UserProgress.completion_status == CompletionStatus.COMPLETED)
              .first())
             
             months_data.append({
                 'month': month_start.strftime('%Y-%m'),
                 'month_name': month_start.strftime('%B %Y'),
-                'total_tests': month_stats.total_tests or 0,
-                'accuracy': round(float(month_stats.accuracy or 0) * 100, 1),
-                'avg_response_time': round(float(month_stats.avg_response_time or 0), 1)
+                'total_sessions': month_stats.total_sessions or 0,
+                'accuracy': round(float(month_stats.accuracy or 0), 1),
+                'total_time_minutes': (month_stats.total_time or 0) // 60
             })
-        
-        # Response time trends
-        response_time_trends = (db.session.query(
-            func.date(VocabularyTestResult.created_at).label('date'),
-            func.avg(VocabularyTestResult.response_time).label('avg_time')
-        ).filter(VocabularyTestResult.user_id == user_id)
-         .filter(VocabularyTestResult.created_at >= datetime.utcnow() - timedelta(days=30))
-         .group_by(func.date(VocabularyTestResult.created_at))
-         .order_by(func.date(VocabularyTestResult.created_at))
-         .all())
         
         return {
             'monthly_performance': list(reversed(months_data)),
-            'response_time_trend': [
-                {
-                    'date': str(date),
-                    'avg_response_time': round(float(avg_time), 1)
-                } for date, avg_time in response_time_trends
-            ],
             'improvement_indicators': AnalyticsService._calculate_improvement_indicators(user_id)
         }
     
@@ -550,40 +469,91 @@ class AnalyticsService:
         # Recent performance (last 7 days)
         recent_cutoff = datetime.utcnow() - timedelta(days=7)
         recent_stats = (db.session.query(
-            func.avg(func.cast(VocabularyTestResult.is_correct, db.Float)).label('accuracy'),
-            func.avg(VocabularyTestResult.response_time).label('response_time')
-        ).filter(VocabularyTestResult.user_id == user_id)
-         .filter(VocabularyTestResult.created_at >= recent_cutoff)
+            func.avg(UserProgress.accuracy_rate).label('accuracy'),
+            func.avg(UserProgress.time_spent).label('time_spent')
+        ).filter(UserProgress.user_id == user_id)
+         .filter(UserProgress.session_start >= recent_cutoff)
+         .filter(UserProgress.completion_status == CompletionStatus.COMPLETED)
          .first())
         
         # Previous period (7-14 days ago)
         previous_start = datetime.utcnow() - timedelta(days=14)
         previous_end = datetime.utcnow() - timedelta(days=7)
         previous_stats = (db.session.query(
-            func.avg(func.cast(VocabularyTestResult.is_correct, db.Float)).label('accuracy'),
-            func.avg(VocabularyTestResult.response_time).label('response_time')
-        ).filter(VocabularyTestResult.user_id == user_id)
-         .filter(VocabularyTestResult.created_at >= previous_start)
-         .filter(VocabularyTestResult.created_at <= previous_end)
+            func.avg(UserProgress.accuracy_rate).label('accuracy'),
+            func.avg(UserProgress.time_spent).label('time_spent')
+        ).filter(UserProgress.user_id == user_id)
+         .filter(UserProgress.session_start >= previous_start)
+         .filter(UserProgress.session_start <= previous_end)
+         .filter(UserProgress.completion_status == CompletionStatus.COMPLETED)
          .first())
         
         indicators = {}
         
         if recent_stats.accuracy and previous_stats.accuracy:
-            accuracy_change = (recent_stats.accuracy - previous_stats.accuracy) * 100
+            accuracy_change = recent_stats.accuracy - previous_stats.accuracy
             indicators['accuracy_trend'] = {
                 'change_percentage': round(accuracy_change, 1),
                 'direction': 'improving' if accuracy_change > 0 else 'declining' if accuracy_change < 0 else 'stable'
             }
         
-        if recent_stats.response_time and previous_stats.response_time:
-            time_change = ((recent_stats.response_time - previous_stats.response_time) / previous_stats.response_time) * 100
-            indicators['speed_trend'] = {
+        if recent_stats.time_spent and previous_stats.time_spent:
+            time_change = ((recent_stats.time_spent - previous_stats.time_spent) / previous_stats.time_spent) * 100
+            indicators['efficiency_trend'] = {
                 'change_percentage': round(time_change, 1),
                 'direction': 'faster' if time_change < 0 else 'slower' if time_change > 0 else 'stable'
             }
         
         return indicators
+    
+    @staticmethod
+    def _generate_recommendations(user_id: int, dashboard_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Generate personalized learning recommendations"""
+        recommendations = []
+        
+        overview = dashboard_data['overview']
+        streak_data = dashboard_data['streak_data']
+        
+        # Streak recommendations
+        if streak_data['current_streak'] == 0:
+            recommendations.append({
+                'type': 'streak',
+                'priority': 'medium',
+                'title': '开始学习连击',
+                'description': '建立每日学习习惯，开始您的学习连击。',
+                'action': '今天开始练习'
+            })
+        elif streak_data['current_streak'] < 7:
+            recommendations.append({
+                'type': 'streak',
+                'priority': 'medium',
+                'title': '继续学习连击',
+                'description': f'您已连续学习{streak_data["current_streak"]}天，继续保持！',
+                'action': '继续每日练习'
+            })
+        
+        # Accuracy recommendations
+        if overview['average_accuracy'] < 70:
+            recommendations.append({
+                'type': 'accuracy',
+                'priority': 'high',
+                'title': '提高学习准确率',
+                'description': '您的平均准确率低于70%，建议复习基础内容。',
+                'action': '复习基础练习'
+            })
+        
+        # Activity recommendations
+        if overview['total_sessions'] < 5:
+            recommendations.append({
+                'type': 'expansion',
+                'priority': 'medium',
+                'title': '增加学习频率',
+                'description': '增加练习次数以提高学习效果。',
+                'action': '浏览学习模块'
+            })
+        
+        return recommendations
+    
     
     @staticmethod
     def generate_progress_report(user_id: int, report_type: str = 'weekly') -> Dict[str, Any]:
@@ -600,20 +570,21 @@ class AnalyticsService:
         # Get comprehensive data
         dashboard_data = AnalyticsService.get_progress_dashboard(user_id)
         
-        # Additional report-specific data
+        # Additional report-specific data for UserProgress sessions
         period_stats = (db.session.query(
-            func.count(VocabularyTestResult.id).label('total_tests'),
-            func.sum(func.cast(VocabularyTestResult.is_correct, db.Integer)).label('correct_tests'),
-            func.count(func.distinct(func.date(VocabularyTestResult.created_at))).label('active_days')
-        ).filter(VocabularyTestResult.user_id == user_id)
-         .filter(VocabularyTestResult.created_at >= cutoff_date)
+            func.count(UserProgress.id).label('total_sessions'),
+            func.sum(UserProgress.items_correct).label('correct_items'),
+            func.sum(UserProgress.items_attempted).label('attempted_items'),
+            func.count(func.distinct(func.date(UserProgress.session_start))).label('active_days')
+        ).filter(UserProgress.user_id == user_id)
+         .filter(UserProgress.session_start >= cutoff_date)
+         .filter(UserProgress.completion_status == CompletionStatus.COMPLETED)
          .first())
         
-        # Words progress during period
+        # Words progress during period (from UserWordProgress)
         words_progress = (db.session.query(
-            func.count(UserVocabulary.id).label('words_reviewed'),
-            func.sum(func.case([(UserVocabulary.last_updated >= cutoff_date, 1)], else_=0)).label('words_updated')
-        ).filter(UserVocabulary.user_id == user_id)
+            func.count(UserWordProgress.id).label('words_reviewed')
+        ).filter(UserWordProgress.user_id == user_id)
          .first())
         
         report = {
@@ -622,12 +593,12 @@ class AnalyticsService:
             'period_start': cutoff_date.isoformat(),
             'period_end': datetime.utcnow().isoformat(),
             'period_summary': {
-                'total_tests': period_stats.total_tests or 0,
-                'correct_tests': period_stats.correct_tests or 0,
-                'accuracy': round(((period_stats.correct_tests or 0) / max(1, period_stats.total_tests or 1)) * 100, 1),
+                'total_sessions': period_stats.total_sessions or 0,
+                'correct_items': period_stats.correct_items or 0,
+                'attempted_items': period_stats.attempted_items or 0,
+                'accuracy': round(((period_stats.correct_items or 0) / max(1, period_stats.attempted_items or 1)) * 100, 1),
                 'active_days': period_stats.active_days or 0,
-                'words_reviewed': words_progress.words_reviewed or 0,
-                'words_updated': words_progress.words_updated or 0
+                'words_reviewed': words_progress.words_reviewed or 0
             },
             'dashboard_data': dashboard_data,
             'recommendations': AnalyticsService._generate_recommendations(user_id, dashboard_data),
@@ -635,61 +606,3 @@ class AnalyticsService:
         }
         
         return report
-    
-    @staticmethod
-    def _generate_recommendations(user_id: int, dashboard_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Generate personalized learning recommendations"""
-        recommendations = []
-        
-        overview = dashboard_data['overview']
-        streak_data = dashboard_data['streak_data']
-        
-        # Review recommendations
-        if overview['due_for_review'] > 0:
-            recommendations.append({
-                'type': 'review',
-                'priority': 'high',
-                'title': 'Review Due Words',
-                'description': f'You have {overview["due_for_review"]} words due for review. Review them to maintain your progress.',
-                'action': 'Start review session'
-            })
-        
-        # Streak recommendations
-        if streak_data['current_streak'] == 0:
-            recommendations.append({
-                'type': 'streak',
-                'priority': 'medium',
-                'title': 'Start Your Learning Streak',
-                'description': 'Begin a daily learning streak to build consistent study habits.',
-                'action': 'Practice vocabulary today'
-            })
-        elif streak_data['current_streak'] < 7:
-            recommendations.append({
-                'type': 'streak',
-                'priority': 'medium',
-                'title': 'Build Your Streak',
-                'description': f'You have a {streak_data["current_streak"]} day streak. Keep it going!',
-                'action': 'Continue daily practice'
-            })
-        
-        # Accuracy recommendations
-        if overview['average_success_rate'] < 70:
-            recommendations.append({
-                'type': 'accuracy',
-                'priority': 'high',
-                'title': 'Improve Accuracy',
-                'description': 'Your accuracy is below 70%. Focus on reviewing familiar words.',
-                'action': 'Review lower-level words'
-            })
-        
-        # New words recommendations
-        if overview['learning_words'] < 5:
-            recommendations.append({
-                'type': 'expansion',
-                'priority': 'medium',
-                'title': 'Learn New Words',
-                'description': 'Add more words to your vocabulary to expand your learning.',
-                'action': 'Browse vocabulary categories'
-            })
-        
-        return recommendations

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Select, Radio, Slider, Space, Typography, Button, Row, Col, Tag, Checkbox } from 'antd';
-import { BookOutlined, SettingOutlined, PlayCircleOutlined, EditOutlined } from '@ant-design/icons';
+import { Card, Select, Radio, Slider, Space, Typography, Button, Row, Col, Tag, Checkbox, message } from 'antd';
+import { BookOutlined, SettingOutlined, PlayCircleOutlined, EditOutlined, LoadingOutlined } from '@ant-design/icons';
 import type { DictationConfig, DictationMode } from '../../types/dictation';
-import { WORD_LIBRARIES } from '../../types/dictation';
+import { vocabularyLibraryAdapter } from '../../services/vocabularyLibraryAdapter';
+import type { VocabularyLibrary } from '../../services/vocabularyLibraryAdapter';
 import './LibrarySelector.css';
 
 const { Title, Text } = Typography;
@@ -23,7 +24,7 @@ const WordPracticeSelector: React.FC<WordPracticeSelectorProps> = ({
 }) => {
   const [config, setConfig] = useState<DictationConfig>({
     practice_type: 'word', // 固定为单词练习
-    library: 'elementary_all',
+    library: '',
     mode: 'partial_blank',
     sentence_count: 10,
     difficulty_level: 3,
@@ -34,6 +35,10 @@ const WordPracticeSelector: React.FC<WordPracticeSelectorProps> = ({
     auto_play_new_sentence: true,
     ...defaultConfig
   });
+
+  // 动态加载的词库列表
+  const [vocabularyLibraries, setVocabularyLibraries] = useState<VocabularyLibrary[]>([]);
+  const [librariesLoading, setLibrariesLoading] = useState(true);
 
   // 模式选项
   const modeOptions = [
@@ -55,7 +60,42 @@ const WordPracticeSelector: React.FC<WordPracticeSelectorProps> = ({
   ] as const;
 
   // 获取选中的词库信息
-  const selectedLibrary = WORD_LIBRARIES.find(lib => lib.id === config.library);
+  const selectedLibrary = vocabularyLibraries.find(lib => lib.id === config.library);
+
+  // 加载词库列表
+  useEffect(() => {
+    const loadVocabularyLibraries = async () => {
+      try {
+        setLibrariesLoading(true);
+        const libraries = await vocabularyLibraryAdapter.getVocabularyLibraries();
+        
+        if (libraries && libraries.length > 0) {
+          setVocabularyLibraries(libraries);
+          
+          // 如果没有选中的词库，默认选择第一个
+          if (!config.library && libraries.length > 0) {
+            updateConfig({ library: libraries[0].id });
+          }
+        } else {
+          message.warning('未找到可用的词库');
+        }
+      } catch (error) {
+        console.error('Failed to load vocabulary libraries:', error);
+        message.error('加载词库失败，已使用默认词库');
+        
+        // 如果加载失败，使用适配器的后备词库
+        const fallbackLibraries = vocabularyLibraryAdapter.getFallbackLibraries();
+        setVocabularyLibraries(fallbackLibraries);
+        if (!config.library && fallbackLibraries.length > 0) {
+          updateConfig({ library: fallbackLibraries[0].id });
+        }
+      } finally {
+        setLibrariesLoading(false);
+      }
+    };
+
+    loadVocabularyLibraries();
+  }, []);
 
   // 更新配置
   const updateConfig = (updates: Partial<DictationConfig>) => {
@@ -106,8 +146,11 @@ const WordPracticeSelector: React.FC<WordPracticeSelectorProps> = ({
             onChange={(value) => updateConfig({ library: value })}
             style={{ width: '100%' }}
             size="large"
+            loading={librariesLoading}
+            placeholder={librariesLoading ? "正在加载词库..." : "请选择词库"}
+            notFoundContent={librariesLoading ? <LoadingOutlined spin /> : "暂无词库"}
           >
-            {WORD_LIBRARIES.map(library => (
+            {vocabularyLibraries.map(library => (
               <Option key={library.id} value={library.id}>
                 <div className="library-option">
                   <div className="library-name">{library.name}</div>
@@ -125,17 +168,19 @@ const WordPracticeSelector: React.FC<WordPracticeSelectorProps> = ({
             <div className="library-details">
               <Space wrap>
                 <Tag color="blue">
-                  年级：{selectedLibrary.grade_level || '通用'}
+                  年级：{selectedLibrary.grade_level ? `${selectedLibrary.grade_level}年级` : '通用'}
                 </Tag>
                 <Tag color="green">
                   单词数：{selectedLibrary.word_count}
                 </Tag>
               </Space>
-              <div style={{ marginTop: 8 }}>
-                <Text type="secondary" style={{ fontSize: '12px' }}>
-                  包含分类：{selectedLibrary.categories.join('、')}
-                </Text>
-              </div>
+              {selectedLibrary.categories && selectedLibrary.categories.length > 0 && (
+                <div style={{ marginTop: 8 }}>
+                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                    包含分类：{selectedLibrary.categories.join('、')}
+                  </Text>
+                </div>
+              )}
             </div>
           )}
         </Card>
@@ -267,13 +312,15 @@ const WordPracticeSelector: React.FC<WordPracticeSelectorProps> = ({
               icon={<PlayCircleOutlined />}
               onClick={handleStartPractice}
               className="start-practice-button"
+              disabled={!config.library || librariesLoading}
+              loading={librariesLoading}
             >
-              开始单词练习
+              {librariesLoading ? '加载中...' : '开始单词练习'}
             </Button>
             
             <div className="config-summary">
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                单词练习：{selectedLibrary?.name} • {config.sentence_count}个单词 • 
+                单词练习：{selectedLibrary?.name || '请选择词库'} • {config.sentence_count}个单词 • 
                 {modeOptions.find(m => m.value === config.mode)?.label} • 
                 难度{config.difficulty_level}级
               </Text>

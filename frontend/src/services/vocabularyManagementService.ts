@@ -336,21 +336,47 @@ class VocabularyManagementService {
       end_date?: string;
     } = {}
   ): Promise<{ success: boolean; message: string; assignment: any }> {
+    const requestData = {
+      user_id: userId,
+      ...options
+    };
+    
+    console.log('vocabularyManagementService.assignLibraryToUser:', {
+      url: `${API_BASE}/libraries/${libraryId}/assign`,
+      libraryId,
+      userId,
+      options,
+      requestData
+    });
+
     const response = await fetch(`${API_BASE}/libraries/${libraryId}/assign`, {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify({
-        user_id: userId,
-        ...options
-      })
+      body: JSON.stringify(requestData)
+    });
+
+    console.log('vocabularyManagementService.assignLibraryToUser response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const errorText = await response.text();
+      console.error('vocabularyManagementService.assignLibraryToUser error:', errorText);
+      
+      let error;
+      try {
+        error = JSON.parse(errorText);
+      } catch {
+        error = { error: errorText };
+      }
       throw new Error(error.error || 'Failed to assign library');
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('vocabularyManagementService.assignLibraryToUser success:', result);
+    return result;
   }
 
   // Import with Audio Generation
@@ -557,6 +583,257 @@ class VocabularyManagementService {
 
     return response.json();
   }
+
+  // =============================================================================
+  // Library Assignment Management Methods
+  // =============================================================================
+
+  /**
+   * Get all library assignments with filtering options
+   */
+  async getAllAssignments(params?: {
+    page?: number;
+    per_page?: number;
+    user_id?: number;
+    library_id?: string;
+    is_required?: boolean;
+  }): Promise<{
+    success: boolean;
+    assignments: LibraryAssignmentWithDetails[];
+    pagination: {
+      page: number;
+      pages: number;
+      per_page: number;
+      total: number;
+      has_next: boolean;
+      has_prev: boolean;
+    };
+  }> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
+    if (params?.user_id) queryParams.append('user_id', params.user_id.toString());
+    if (params?.library_id) queryParams.append('library_id', params.library_id);
+    if (params?.is_required !== undefined) queryParams.append('is_required', params.is_required.toString());
+
+    const response = await fetch(`${API_BASE}/assignments?${queryParams}`, {
+      headers: this.getHeaders()
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch assignments');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get all library assignments for a specific user
+   */
+  async getUserAssignments(userId: number): Promise<{
+    success: boolean;
+    user: {
+      id: number;
+      username: string;
+      email: string;
+      role: string;
+    };
+    assignments: LibraryAssignmentWithDetails[];
+    total_assignments: number;
+  }> {
+    const response = await fetch(`${API_BASE}/users/${userId}/assignments`, {
+      headers: this.getHeaders()
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch user assignments');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Update an existing library assignment
+   */
+  async updateAssignment(assignmentId: number, data: {
+    is_required?: boolean;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    assignment: LibraryAssignment;
+  }> {
+    const response = await fetch(`${API_BASE}/assignments/${assignmentId}`, {
+      method: 'PUT',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update assignment');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Remove a library assignment
+   */
+  async removeAssignment(assignmentId: number): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    const response = await fetch(`${API_BASE}/assignments/${assignmentId}`, {
+      method: 'DELETE',
+      headers: this.getHeaders()
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to remove assignment');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Bulk assign libraries to multiple users
+   */
+  async bulkAssignLibraries(data: {
+    user_ids: number[];
+    library_ids: string[];
+    is_required?: boolean;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    created_count: number;
+    skipped_count: number;
+    assignments: Array<{
+      user_id: number;
+      username: string;
+      library_id: string;
+      library_name: string;
+    }>;
+  }> {
+    const response = await fetch(`${API_BASE}/assignments/bulk`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create bulk assignments');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get all users assigned to a specific library
+   */
+  async getLibraryAssignedUsers(libraryId: string): Promise<{
+    success: boolean;
+    library: {
+      id: number;
+      library_id: string;
+      name: string;
+      description: string;
+      word_count: number;
+    };
+    assigned_users: Array<{
+      user_id: number;
+      username: string;
+      email: string;
+      role: string;
+      assignment: LibraryAssignment;
+    }>;
+    total_assigned: number;
+  }> {
+    const response = await fetch(`${API_BASE}/libraries/${libraryId}/assigned-users`, {
+      headers: this.getHeaders()
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch assigned users');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get assignment statistics and summary
+   */
+  async getAssignmentSummary(): Promise<{
+    success: boolean;
+    summary: {
+      total_assignments: number;
+      required_assignments: number;
+      optional_assignments: number;
+      users_with_assignments: number;
+      libraries_with_assignments: number;
+      recent_assignments: number;
+      top_assigned_libraries: Array<{
+        name: string;
+        library_id: string;
+        assignment_count: number;
+      }>;
+    };
+  }> {
+    const response = await fetch(`${API_BASE}/assignment-summary`, {
+      headers: this.getHeaders()
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch assignment summary');
+    }
+
+    return response.json();
+  }
+}
+
+// Additional types for assignment management
+export interface LibraryAssignment {
+  id: number;
+  library_id: number;
+  user_id: number;
+  is_required: boolean;
+  start_date?: string;
+  end_date?: string;
+  assigned_by: number;
+  words_completed: number;
+  last_accessed?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LibraryAssignmentWithDetails extends LibraryAssignment {
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    role: string;
+  };
+  library: {
+    id: number;
+    library_id: string;
+    name: string;
+    description: string;
+    word_count: number;
+    grade_level: number;
+  };
+  assigned_by_user?: {
+    id: number;
+    username: string;
+  };
 }
 
 export const vocabularyManagementService = new VocabularyManagementService();

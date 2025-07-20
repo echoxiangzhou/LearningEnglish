@@ -54,7 +54,7 @@ const initialState: UIState = {
   notifications: [],
   modals: {},
   breadcrumbs: [{ title: 'Dashboard' }],
-  pageTitle: 'Smart English Learning',
+  pageTitle: '英语学习系统',
   deviceType: 'desktop',
   screenSize: {
     width: window.innerWidth || 1200,
@@ -152,7 +152,7 @@ const uiSlice = createSlice({
     
     setPageTitle: (state, action: PayloadAction<string>) => {
       state.pageTitle = action.payload;
-      document.title = `${action.payload} - Smart English Learning`;
+      document.title = `${action.payload} - 英语学习系统`;
     },
     
     // Device and screen management

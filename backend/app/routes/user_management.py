@@ -307,6 +307,53 @@ def toggle_user_status(user_id):
         logger.error(f"Error toggling user status {user_id}: {str(e)}")
         return jsonify({'error': 'Failed to update user status'}), 500
 
+@bp.route('/<int:user_id>/reset-password', methods=['POST'])
+@jwt_required()
+@require_admin()
+def reset_user_password(user_id):
+    """Reset user password (admin only)"""
+    try:
+        current_user_id = int(get_jwt_identity())
+        current_user = User.query.get(current_user_id)
+        
+        if not current_user or not current_user.is_admin:
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        # Find the user to reset password for
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        data = request.get_json()
+        if not data or not data.get('new_password'):
+            return jsonify({'error': 'new_password is required'}), 400
+        
+        new_password = data.get('new_password')
+        
+        # Validate new password strength
+        from app.routes.auth import is_valid_password
+        is_valid, password_message = is_valid_password(new_password)
+        if not is_valid:
+            return jsonify({'error': password_message}), 400
+        
+        # Update password
+        user.set_password(new_password)
+        user.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+        
+        # Log the password reset action
+        logger.info(f"Admin {current_user.username} reset password for user {user.username}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Password reset successfully for user {user.username}'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error resetting password for user {user_id}: {str(e)}")
+        return jsonify({'error': 'Failed to reset password'}), 500
+
 @bp.route('/simple', methods=['GET'])
 def get_simple_user_list():
     """Get simplified user list for dropdowns/assignments"""

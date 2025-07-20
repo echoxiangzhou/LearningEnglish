@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Card, Tabs, Row, Col, Statistic, Spin, Alert } from 'antd';
-import { UserOutlined, FileTextOutlined, BarChartOutlined, BookOutlined } from '@ant-design/icons';
+import { UserOutlined, FileTextOutlined, BarChartOutlined, BookOutlined, TeamOutlined } from '@ant-design/icons';
 import { useAppSelector } from '../store/hooks';
 import { adminAnalyticsService, AdminDashboardStats } from '../services/adminAnalyticsService';
 import VocabularyManager from '../components/admin/VocabularyManager';
@@ -10,6 +10,7 @@ import SentenceManager from '../components/admin/SentenceManager';
 import CategoryManager from '../components/admin/CategoryManager';
 import UserManager from '../components/admin/UserManager';
 import SoundConfigManager from '../components/admin/SoundConfigManager';
+import LibraryAssignmentManager from '../components/admin/LibraryAssignmentManager';
 import UserRoleDebug from '../components/debug/UserRoleDebug';
 import './AdminPanel.css';
 
@@ -164,6 +165,10 @@ const AdminPanel: React.FC = () => {
         
         <TabPane tab="用户管理" key="users">
           <UserManager />
+        </TabPane>
+        
+        <TabPane tab="词库分配" key="assignments">
+          <LibraryAssignmentManager />
         </TabPane>
         
         <TabPane tab="声音设置" key="sound">

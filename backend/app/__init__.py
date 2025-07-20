@@ -4,6 +4,7 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_socketio import SocketIO
+from flask_mail import Mail
 import os
 from dotenv import load_dotenv
 
@@ -13,6 +14,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
 socketio = SocketIO()
+mail = Mail()
 
 def create_app():
     app = Flask(__name__)
@@ -25,10 +27,19 @@ def create_app():
     app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY') or 'jwt-secret-key'
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 3600  # 1 hour
     
+    # Email configuration
+    app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+    app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
+    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME')
+    
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    mail.init_app(app)
     CORS(app, origins="*")
     socketio.init_app(app, cors_allowed_origins="*", async_mode='threading')
     
@@ -50,6 +61,7 @@ def create_app():
     from app.routes.admin_statistics import admin_stats_bp
     from app.routes.onboarding import bp as onboarding_bp
     from app.routes.error_tracking import error_tracking_bp
+    from app.routes.vocabulary_management import vocabulary_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(main_bp, url_prefix='/api')
@@ -68,6 +80,7 @@ def create_app():
     app.register_blueprint(admin_stats_bp)
     app.register_blueprint(onboarding_bp, url_prefix='/api/onboarding')
     app.register_blueprint(error_tracking_bp)
+    app.register_blueprint(vocabulary_bp, url_prefix='/api/vocabulary-management')
     
     # JWT token blacklist check
     @jwt.token_in_blocklist_loader

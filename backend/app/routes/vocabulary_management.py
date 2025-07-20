@@ -4,11 +4,10 @@ from sqlalchemy import and_, or_, func
 from sqlalchemy.orm import joinedload
 from app import db
 from app.models.word import Word
-from app.models.vocabulary import VocabularyCategory
 from app.models.vocabulary_library import VocabularyLibrary, LibraryAssignment, library_words
 from app.models.user import User
 from app.services.tts_service import TTSService
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import csv
 import io
@@ -462,7 +461,7 @@ def remove_word_from_library(library_id, word_id):
 
 @vocabulary_bp.route('/libraries/<library_id>/assign', methods=['POST'])
 @jwt_required()
-def assign_library_to_user():
+def assign_library_to_user(library_id):
     """Assign a library to a user"""
     current_user_id = get_jwt_identity()
     current_user = User.query.get(current_user_id)
@@ -474,13 +473,21 @@ def assign_library_to_user():
     
     try:
         data = request.get_json()
-        library_id = request.view_args['library_id']
+        current_app.logger.info(f"assign_library_to_user: library_id={library_id}, data={data}")
         
         if not data or not data.get('user_id'):
+            current_app.logger.error("assign_library_to_user: user_id is required")
             return jsonify({'error': 'user_id is required'}), 400
         
-        library = VocabularyLibrary.query.filter_by(library_id=library_id).first_or_404()
-        user = User.query.get_or_404(data['user_id'])
+        library = VocabularyLibrary.query.filter_by(library_id=library_id).first()
+        if not library:
+            current_app.logger.error(f"assign_library_to_user: Library not found with library_id={library_id}")
+            return jsonify({'error': 'Library not found'}), 404
+        
+        user = User.query.get(data['user_id'])
+        if not user:
+            current_app.logger.error(f"assign_library_to_user: User not found with id={data['user_id']}")
+            return jsonify({'error': 'User not found'}), 404
         
         # Check if assignment already exists
         existing = LibraryAssignment.query.filter_by(
@@ -489,6 +496,7 @@ def assign_library_to_user():
         ).first()
         
         if existing:
+            current_app.logger.warning(f"assign_library_to_user: Assignment already exists for library_id={library.id}, user_id={user.id}")
             return jsonify({'error': 'Library is already assigned to this user'}), 409
         
         # Create assignment
@@ -501,12 +509,25 @@ def assign_library_to_user():
         
         # Set dates if provided
         if data.get('start_date'):
-            assignment.start_date = datetime.fromisoformat(data['start_date']).date()
+            try:
+                assignment.start_date = datetime.fromisoformat(data['start_date']).date()
+            except ValueError as e:
+                current_app.logger.error(f"assign_library_to_user: Invalid start_date format: {data['start_date']}, error: {e}")
+                return jsonify({'error': 'Invalid start_date format. Use YYYY-MM-DD'}), 400
+                
         if data.get('end_date'):
-            assignment.end_date = datetime.fromisoformat(data['end_date']).date()
+            try:
+                assignment.end_date = datetime.fromisoformat(data['end_date']).date()
+            except ValueError as e:
+                current_app.logger.error(f"assign_library_to_user: Invalid end_date format: {data['end_date']}, error: {e}")
+                return jsonify({'error': 'Invalid end_date format. Use YYYY-MM-DD'}), 400
+        
+        current_app.logger.info(f"assign_library_to_user: Creating assignment - library_id={library.id}, user_id={user.id}, is_required={assignment.is_required}")
         
         db.session.add(assignment)
         db.session.commit()
+        
+        current_app.logger.info(f"assign_library_to_user: Assignment created successfully with id={assignment.id}")
         
         return jsonify({
             'success': True,
@@ -1466,3 +1487,457 @@ Examples:
     
     current_app.logger.error(f"All models failed to generate phonetic for '{word}'")
     return None
+
+# =============================================================================
+# Library Assignment Management API Endpoints
+# =============================================================================
+
+@vocabulary_bp.route('/assignments', methods=['GET'])
+@jwt_required()
+def get_all_assignments():
+    """Get all library assignments with filtering options"""
+    try:
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
+        
+        # Check permissions
+        auth_error = require_admin_or_teacher(current_user)
+        if auth_error:
+            return auth_error
+        
+        # Get query parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = min(request.args.get('per_page', 50, type=int), 100)
+        user_id = request.args.get('user_id', type=int)
+        library_id = request.args.get('library_id')
+        is_required = request.args.get('is_required', type=bool)
+        
+        # Build query
+        query = db.session.query(LibraryAssignment)\
+            .join(User, LibraryAssignment.user_id == User.id)\
+            .join(VocabularyLibrary, LibraryAssignment.library_id == VocabularyLibrary.id)\
+            .filter(VocabularyLibrary.is_active == True)
+        
+        # Apply filters
+        if user_id:
+            query = query.filter(LibraryAssignment.user_id == user_id)
+        if library_id:
+            library = VocabularyLibrary.query.filter_by(library_id=library_id).first()
+            if library:
+                query = query.filter(LibraryAssignment.library_id == library.id)
+        if is_required is not None:
+            query = query.filter(LibraryAssignment.is_required == is_required)
+        
+        # Pagination
+        assignments = query.paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        # Build response with detailed information
+        assignments_data = []
+        for assignment in assignments.items:
+            assignment_dict = assignment.to_dict()
+            
+            # Add user information
+            user = User.query.get(assignment.user_id)
+            assignment_dict['user'] = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': user.role
+            }
+            
+            # Add library information
+            library = VocabularyLibrary.query.get(assignment.library_id)
+            assignment_dict['library'] = {
+                'id': library.id,
+                'library_id': library.library_id,
+                'name': library.name,
+                'description': library.description,
+                'word_count': library.word_count,
+                'grade_level': library.grade_level
+            }
+            
+            # Add assigner information
+            if assignment.assigned_by:
+                assigner = User.query.get(assignment.assigned_by)
+                assignment_dict['assigned_by_user'] = {
+                    'id': assigner.id,
+                    'username': assigner.username
+                } if assigner else None
+            
+            assignments_data.append(assignment_dict)
+        
+        return jsonify({
+            'success': True,
+            'assignments': assignments_data,
+            'pagination': {
+                'page': assignments.page,
+                'pages': assignments.pages,
+                'per_page': assignments.per_page,
+                'total': assignments.total,
+                'has_next': assignments.has_next,
+                'has_prev': assignments.has_prev
+            }
+        })
+    
+    except Exception as e:
+        current_app.logger.error(f"Error fetching assignments: {str(e)}")
+        return jsonify({'error': 'Failed to fetch assignments'}), 500
+
+@vocabulary_bp.route('/users/<int:user_id>/assignments', methods=['GET'])
+@jwt_required()
+def get_user_assignments(user_id):
+    """Get all library assignments for a specific user"""
+    try:
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
+        
+        # Check permissions - admin/teacher can see all, students can only see their own
+        if current_user.role not in ['admin', 'teacher'] and current_user.id != user_id:
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        user = User.query.get_or_404(user_id)
+        
+        # Get user's assignments
+        assignments = db.session.query(LibraryAssignment)\
+            .join(VocabularyLibrary, LibraryAssignment.library_id == VocabularyLibrary.id)\
+            .filter(
+                LibraryAssignment.user_id == user_id,
+                VocabularyLibrary.is_active == True
+            ).all()
+        
+        assignments_data = []
+        for assignment in assignments:
+            assignment_dict = assignment.to_dict()
+            
+            # Add library information
+            library = VocabularyLibrary.query.get(assignment.library_id)
+            assignment_dict['library'] = library.to_frontend_dict()
+            
+            assignments_data.append(assignment_dict)
+        
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': user.role
+            },
+            'assignments': assignments_data,
+            'total_assignments': len(assignments_data)
+        })
+    
+    except Exception as e:
+        current_app.logger.error(f"Error fetching user assignments: {str(e)}")
+        return jsonify({'error': 'Failed to fetch user assignments'}), 500
+
+@vocabulary_bp.route('/assignments/<int:assignment_id>', methods=['PUT'])
+@jwt_required()
+def update_assignment(assignment_id):
+    """Update an existing library assignment"""
+    try:
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
+        
+        # Check permissions
+        auth_error = require_admin_or_teacher(current_user)
+        if auth_error:
+            return auth_error
+        
+        assignment = LibraryAssignment.query.get_or_404(assignment_id)
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Update assignment fields
+        if 'is_required' in data:
+            assignment.is_required = data['is_required']
+        
+        if 'start_date' in data:
+            if data['start_date']:
+                assignment.start_date = datetime.fromisoformat(data['start_date']).date()
+            else:
+                assignment.start_date = None
+        
+        if 'end_date' in data:
+            if data['end_date']:
+                assignment.end_date = datetime.fromisoformat(data['end_date']).date()
+            else:
+                assignment.end_date = None
+        
+        assignment.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Assignment updated successfully',
+            'assignment': assignment.to_dict()
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating assignment: {str(e)}")
+        return jsonify({'error': 'Failed to update assignment'}), 500
+
+@vocabulary_bp.route('/assignments/<int:assignment_id>', methods=['DELETE'])
+@jwt_required()
+def remove_assignment(assignment_id):
+    """Remove a library assignment"""
+    try:
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
+        
+        # Check permissions
+        auth_error = require_admin_or_teacher(current_user)
+        if auth_error:
+            return auth_error
+        
+        assignment = LibraryAssignment.query.get_or_404(assignment_id)
+        
+        # Get assignment info before deletion for response
+        user = User.query.get(assignment.user_id)
+        library = VocabularyLibrary.query.get(assignment.library_id)
+        
+        db.session.delete(assignment)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Assignment removed: {library.name} from {user.username}'
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error removing assignment: {str(e)}")
+        return jsonify({'error': 'Failed to remove assignment'}), 500
+
+@vocabulary_bp.route('/assignments/bulk', methods=['POST'])
+@jwt_required()
+def bulk_assign_libraries():
+    """Bulk assign libraries to multiple users"""
+    try:
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
+        
+        # Check permissions
+        auth_error = require_admin_or_teacher(current_user)
+        if auth_error:
+            return auth_error
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        user_ids = data.get('user_ids', [])
+        library_ids = data.get('library_ids', [])  # library_id strings
+        is_required = data.get('is_required', False)
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+        
+        if not user_ids or not library_ids:
+            return jsonify({'error': 'user_ids and library_ids are required'}), 400
+        
+        # Validate users
+        users = User.query.filter(User.id.in_(user_ids)).all()
+        if len(users) != len(user_ids):
+            return jsonify({'error': 'Some users not found'}), 404
+        
+        # Validate libraries
+        libraries = VocabularyLibrary.query.filter(
+            VocabularyLibrary.library_id.in_(library_ids),
+            VocabularyLibrary.is_active == True
+        ).all()
+        if len(libraries) != len(library_ids):
+            return jsonify({'error': 'Some libraries not found'}), 404
+        
+        # Parse dates
+        start_date_obj = None
+        end_date_obj = None
+        
+        if start_date:
+            start_date_obj = datetime.fromisoformat(start_date).date()
+        if end_date:
+            end_date_obj = datetime.fromisoformat(end_date).date()
+        
+        # Create assignments
+        created_count = 0
+        skipped_count = 0
+        assignments_created = []
+        
+        for user in users:
+            for library in libraries:
+                # Check if assignment already exists
+                existing = LibraryAssignment.query.filter_by(
+                    library_id=library.id,
+                    user_id=user.id
+                ).first()
+                
+                if existing:
+                    skipped_count += 1
+                    continue
+                
+                # Create new assignment
+                assignment = LibraryAssignment(
+                    library_id=library.id,
+                    user_id=user.id,
+                    is_required=is_required,
+                    start_date=start_date_obj,
+                    end_date=end_date_obj,
+                    assigned_by=current_user.id
+                )
+                
+                db.session.add(assignment)
+                assignments_created.append({
+                    'user_id': user.id,
+                    'username': user.username,
+                    'library_id': library.library_id,
+                    'library_name': library.name
+                })
+                created_count += 1
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Bulk assignment completed: {created_count} assignments created, {skipped_count} skipped',
+            'created_count': created_count,
+            'skipped_count': skipped_count,
+            'assignments': assignments_created
+        }), 201
+    
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error in bulk assignment: {str(e)}")
+        return jsonify({'error': 'Failed to create bulk assignments'}), 500
+
+@vocabulary_bp.route('/libraries/<library_id>/assigned-users', methods=['GET'])
+@jwt_required()
+def get_library_assigned_users(library_id):
+    """Get all users assigned to a specific library"""
+    try:
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
+        
+        # Check permissions
+        auth_error = require_admin_or_teacher(current_user)
+        if auth_error:
+            return auth_error
+        
+        # Find library
+        library = VocabularyLibrary.query.filter_by(
+            library_id=library_id, 
+            is_active=True
+        ).first()
+        
+        if not library:
+            return jsonify({'error': 'Library not found'}), 404
+        
+        # Get assigned users
+        assignments = db.session.query(LibraryAssignment, User)\
+            .join(User, LibraryAssignment.user_id == User.id)\
+            .filter(LibraryAssignment.library_id == library.id)\
+            .all()
+        
+        users_data = []
+        for assignment, user in assignments:
+            user_data = {
+                'user_id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': user.role,
+                'assignment': assignment.to_dict()
+            }
+            users_data.append(user_data)
+        
+        return jsonify({
+            'success': True,
+            'library': {
+                'id': library.id,
+                'library_id': library.library_id,
+                'name': library.name,
+                'description': library.description,
+                'word_count': library.word_count
+            },
+            'assigned_users': users_data,
+            'total_assigned': len(users_data)
+        })
+    
+    except Exception as e:
+        current_app.logger.error(f"Error fetching library assigned users: {str(e)}")
+        return jsonify({'error': 'Failed to fetch assigned users'}), 500
+
+@vocabulary_bp.route('/assignment-summary', methods=['GET'])
+@jwt_required()
+def get_assignment_summary():
+    """Get assignment statistics and summary"""
+    try:
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
+        
+        # Check permissions
+        auth_error = require_admin_or_teacher(current_user)
+        if auth_error:
+            return auth_error
+        
+        # Get assignment statistics
+        total_assignments = LibraryAssignment.query.count()
+        required_assignments = LibraryAssignment.query.filter_by(is_required=True).count()
+        
+        # Users with assignments
+        users_with_assignments = db.session.query(
+            func.count(func.distinct(LibraryAssignment.user_id))
+        ).scalar()
+        
+        # Libraries with assignments
+        libraries_with_assignments = db.session.query(
+            func.count(func.distinct(LibraryAssignment.library_id))
+        ).scalar()
+        
+        # Recent assignments (last 7 days)
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        recent_assignments = LibraryAssignment.query.filter(
+            LibraryAssignment.assigned_at >= week_ago
+        ).count()
+        
+        # Top assigned libraries
+        top_libraries = db.session.query(
+            VocabularyLibrary.name,
+            VocabularyLibrary.library_id,
+            func.count(LibraryAssignment.id).label('assignment_count')
+        ).join(
+            LibraryAssignment, VocabularyLibrary.id == LibraryAssignment.library_id
+        ).group_by(
+            VocabularyLibrary.id
+        ).order_by(
+            func.count(LibraryAssignment.id).desc()
+        ).limit(5).all()
+        
+        top_libraries_data = [
+            {
+                'name': name,
+                'library_id': library_id,
+                'assignment_count': count
+            }
+            for name, library_id, count in top_libraries
+        ]
+        
+        return jsonify({
+            'success': True,
+            'summary': {
+                'total_assignments': total_assignments,
+                'required_assignments': required_assignments,
+                'optional_assignments': total_assignments - required_assignments,
+                'users_with_assignments': users_with_assignments,
+                'libraries_with_assignments': libraries_with_assignments,
+                'recent_assignments': recent_assignments,
+                'top_assigned_libraries': top_libraries_data
+            }
+        })
+    
+    except Exception as e:
+        current_app.logger.error(f"Error fetching assignment summary: {str(e)}")
+        return jsonify({'error': 'Failed to fetch assignment summary'}), 500

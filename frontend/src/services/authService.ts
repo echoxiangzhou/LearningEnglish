@@ -49,6 +49,11 @@ export interface PasswordResetConfirm {
   new_password: string;
 }
 
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+}
+
 const API_BASE = '/api';
 const TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -78,13 +83,33 @@ class AuthService {
 
       if (!response.ok) {
         // Try to parse error response
-        let errorMessage = 'Login failed';
+        let errorMessage = '登录失败';
         try {
           const error = await response.json();
           errorMessage = error.error || error.message || errorMessage;
+          // Translate common error messages to Chinese
+          if (errorMessage.includes('Invalid email or password')) {
+            errorMessage = '邮箱或密码错误';
+          } else if (errorMessage.includes('Invalid phone number or password')) {
+            errorMessage = '手机号或密码错误';
+          } else if (errorMessage.includes('Account is deactivated')) {
+            errorMessage = '账户已被禁用';
+          } else if (errorMessage.includes('Email or phone number is required')) {
+            errorMessage = '请输入邮箱或手机号';
+          } else if (errorMessage.includes('Password is required')) {
+            errorMessage = '请输入密码';
+          }
         } catch (parseError) {
           // If response is not JSON, use status text
-          errorMessage = response.statusText || errorMessage;
+          if (response.status === 401) {
+            errorMessage = '用户名或密码错误';
+          } else if (response.status === 403) {
+            errorMessage = '账户已被禁用';
+          } else if (response.status >= 500) {
+            errorMessage = '服务器错误，请稍后重试';
+          } else {
+            errorMessage = response.statusText || errorMessage;
+          }
         }
         throw new Error(errorMessage);
       }
@@ -409,6 +434,34 @@ class AuthService {
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to resend verification code');
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Change user password
+   */
+  async changePassword(data: ChangePasswordRequest): Promise<void> {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE}/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Password change failed');
       }
     } catch (error) {
       throw error;

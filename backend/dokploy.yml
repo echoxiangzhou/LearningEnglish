@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   learning-english-backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: iocas/learning-english-backend:latest
     container_name: learning-english-backend
     restart: unless-stopped
     environment:

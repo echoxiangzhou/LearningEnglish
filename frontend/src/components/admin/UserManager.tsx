@@ -28,7 +28,8 @@ import {
   SearchOutlined,
   ReloadOutlined,
   UserAddOutlined,
-  UserDeleteOutlined
+  UserDeleteOutlined,
+  KeyOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -53,6 +54,11 @@ const UserManager: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [form] = Form.useForm();
+  
+  // Password reset modal state
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null);
+  const [passwordForm] = Form.useForm();
 
   // User statistics
   const [userStats, setUserStats] = useState({
@@ -141,6 +147,30 @@ const UserManager: React.FC = () => {
     } catch (error) {
       message.error('更新用户状态失败');
       console.error('Toggle user status error:', error);
+    }
+  };
+
+  const handleResetPassword = (user: User) => {
+    setResetPasswordUser(user);
+    setPasswordModalVisible(true);
+    passwordForm.resetFields();
+  };
+
+  const handlePasswordReset = async (values: { new_password: string; confirm_password: string }) => {
+    if (!resetPasswordUser) return;
+
+    try {
+      setLoading(true);
+      await userService.resetUserPassword(resetPasswordUser.id, values.new_password);
+      message.success('密码重置成功');
+      setPasswordModalVisible(false);
+      passwordForm.resetFields();
+      setResetPasswordUser(null);
+    } catch (error) {
+      message.error('密码重置失败');
+      console.error('Password reset error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -279,6 +309,13 @@ const UserManager: React.FC = () => {
             onClick={() => handleEditUser(record)}
           >
             编辑
+          </Button>
+          <Button
+            type="link"
+            icon={<KeyOutlined />}
+            onClick={() => handleResetPassword(record)}
+          >
+            重置密码
           </Button>
           {record.role !== 'admin' && (
             <Popconfirm
@@ -513,6 +550,71 @@ const UserManager: React.FC = () => {
               </Button>
               <Button type="primary" htmlType="submit" loading={loading}>
                 {editingUser ? '更新' : '创建'}
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Password Reset Modal */}
+      <Modal
+        title={`重置密码 - ${resetPasswordUser?.username}`}
+        open={passwordModalVisible}
+        onCancel={() => {
+          setPasswordModalVisible(false);
+          passwordForm.resetFields();
+          setResetPasswordUser(null);
+        }}
+        footer={null}
+        width={500}
+      >
+        <Form
+          form={passwordForm}
+          layout="vertical"
+          onFinish={handlePasswordReset}
+        >
+          <Form.Item
+            name="new_password"
+            label="新密码"
+            rules={[
+              { required: true, message: '请输入新密码' },
+              { min: 6, message: '密码长度至少为6个字符' },
+              { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, message: '密码必须包含大小写字母和数字' }
+            ]}
+          >
+            <Input.Password placeholder="输入新密码" />
+          </Form.Item>
+
+          <Form.Item
+            name="confirm_password"
+            label="确认密码"
+            dependencies={['new_password']}
+            rules={[
+              { required: true, message: '请确认新密码' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('new_password') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('两次输入的密码不一致'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password placeholder="再次输入新密码" />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+            <Space>
+              <Button onClick={() => {
+                setPasswordModalVisible(false);
+                passwordForm.resetFields();
+                setResetPasswordUser(null);
+              }}>
+                取消
+              </Button>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                重置密码
               </Button>
             </Space>
           </Form.Item>

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, Select, Radio, Slider, Space, Typography, Button, Row, Col, Tag, Divider, Checkbox } from 'antd';
 import { BookOutlined, SettingOutlined, PlayCircleOutlined, TagsOutlined, AppstoreOutlined } from '@ant-design/icons';
 import type { DictationConfig, DictationMode, PracticeType } from '../../types/dictation';
-import { WORD_LIBRARIES } from '../../types/dictation';
+import { vocabularyLibraryAdapter } from '../../services/vocabularyLibraryAdapter';
+import type { VocabularyLibrary } from '../../services/vocabularyLibraryAdapter';
 import { categoryService } from '../../services/categoryService';
 import type { SentenceCategory } from '../../types/category';
 import './LibrarySelector.css';
@@ -39,9 +40,12 @@ const LibrarySelector: React.FC<LibrarySelectorProps> = ({
   
   const [availableCategories, setAvailableCategories] = useState<SentenceCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [availableLibraries, setAvailableLibraries] = useState<VocabularyLibrary[]>([]);
+  const [loadingLibraries, setLoadingLibraries] = useState(false);
 
   useEffect(() => {
     fetchUserCategories();
+    fetchVocabularyLibraries();
   }, []);
 
   const fetchUserCategories = async () => {
@@ -62,6 +66,22 @@ const LibrarySelector: React.FC<LibrarySelectorProps> = ({
       }
     } finally {
       setLoadingCategories(false);
+    }
+  };
+
+  const fetchVocabularyLibraries = async () => {
+    try {
+      setLoadingLibraries(true);
+      // 获取用户被分配的词汇库
+      const libraries = await vocabularyLibraryAdapter.getVocabularyLibraries();
+      setAvailableLibraries(libraries);
+    } catch (error) {
+      console.error('Error fetching vocabulary libraries:', error);
+      // 如果获取失败，使用后备词库
+      const fallbackLibraries = vocabularyLibraryAdapter.getFallbackLibraries();
+      setAvailableLibraries(fallbackLibraries);
+    } finally {
+      setLoadingLibraries(false);
     }
   };
 
@@ -103,7 +123,7 @@ const LibrarySelector: React.FC<LibrarySelectorProps> = ({
   };
 
   // 获取选中的词库信息
-  const selectedLibrary = WORD_LIBRARIES.find(lib => lib.id === config.library);
+  const selectedLibrary = availableLibraries.find(lib => lib.id === config.library);
 
   // 模式选项
   const modeOptions = [
@@ -201,42 +221,65 @@ const LibrarySelector: React.FC<LibrarySelectorProps> = ({
         {/* 词库选择瓦片 - 仅在单词练习时显示 */}
         {config.practice_type === 'word' && (
           <Card className="tile-card" title="选择词库">
-            <Select
-              value={config.library}
-              onChange={(value) => updateConfig({ library: value })}
-              style={{ width: '100%' }}
-              size="large"
-            >
-              {WORD_LIBRARIES.map(library => (
-                <Option key={library.id} value={library.id}>
-                  <div className="library-option">
-                    <div className="library-name">{library.name}</div>
-                    <div className="library-info">
-                      <Text type="secondary" style={{ fontSize: '12px' }}>
-                        {library.description} • {library.word_count}个单词
-                      </Text>
-                    </div>
-                  </div>
-                </Option>
-              ))}
-            </Select>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+              选择您想要练习的单词词库
+            </Text>
             
-            {selectedLibrary && (
-              <div className="library-details">
-                <Space wrap>
-                  <Tag color="blue">
-                    年级：{selectedLibrary.grade_level || '通用'}
-                  </Tag>
-                  <Tag color="green">
-                    单词数：{selectedLibrary.word_count}
-                  </Tag>
-                  {selectedLibrary.categories.map(category => (
-                    <Tag key={category} color="default">
-                      {category}
-                    </Tag>
-                  ))}
-                </Space>
+            {loadingLibraries ? (
+              <div style={{ textAlign: 'center', padding: '20px' }}>
+                <Text type="secondary">加载词库中...</Text>
               </div>
+            ) : availableLibraries.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '20px', background: '#f5f5f5', borderRadius: '8px' }}>
+                <BookOutlined style={{ fontSize: '24px', color: '#d9d9d9', marginBottom: '8px' }} />
+                <div>
+                  <Text type="secondary">暂无可用词库</Text>
+                </div>
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  管理员尚未为您分配词汇库
+                </Text>
+              </div>
+            ) : (
+              <>
+                <Select
+                  value={config.library}
+                  onChange={(value) => updateConfig({ library: value })}
+                  style={{ width: '100%' }}
+                  size="large"
+                  placeholder="请选择词库"
+                >
+                  {availableLibraries.map(library => (
+                    <Option key={library.id} value={library.id}>
+                      <div className="library-option">
+                        <div className="library-name">{library.name}</div>
+                        <div className="library-info">
+                          <Text type="secondary" style={{ fontSize: '12px' }}>
+                            {library.description} • {library.word_count}个单词
+                          </Text>
+                        </div>
+                      </div>
+                    </Option>
+                  ))}
+                </Select>
+                
+                {selectedLibrary && (
+                  <div className="library-details">
+                    <Space wrap>
+                      <Tag color="blue">
+                        年级：{selectedLibrary.grade_level || '通用'}
+                      </Tag>
+                      <Tag color="green">
+                        单词数：{selectedLibrary.word_count}
+                      </Tag>
+                      {selectedLibrary.categories.map(category => (
+                        <Tag key={category} color="default">
+                          {category}
+                        </Tag>
+                      ))}
+                    </Space>
+                  </div>
+                )}
+              </>
             )}
           </Card>
         )}
